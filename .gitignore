@@ -246,3 +246,4 @@ $RECYCLE.BIN/
 
 # additionally folder/files to ignore
 .aws-sam
+env.json
