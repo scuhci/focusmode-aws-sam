@@ -22,8 +22,23 @@ Globals:
     Environment:
       Variables:
         OpenAIKey: !Ref OpenAIKey
+  Api:
+    Cors:
+      AllowOrigin: "'*'"
+      AllowHeaders: "'Content-Type'"
+      AllowMethods: "'GET'"
 
 Resources:
+  FocusModeApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: FocusMode Api Gateway
+      StageName: Prod
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type'"
+        AllowMethods: "'GET'"
+
   CategorizeFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -33,45 +48,33 @@ Resources:
       Architectures:
       - x86_64
       Events:
-        Categorize:
+        CategorizeApi:
           Type: Api
           Properties:
+            RestApiId: !Ref FocusModeApiGateway
             Path: /categorize
-            Method: get
-  # HelloWorldFunction:
-  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-  #   Properties:
-  #     CodeUri: hello_world/
-  #     Handler: app.lambda_handler
-  #     Runtime: python3.12
-  #     Architectures:
-  #     - x86_64
-  #     Events:
-  #       HelloWorld:
-  #         Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-  #         Properties:
-  #           Path: /hello
-  #           Method: get
+            Method: GET
 
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  CategorizeApi:
-    Description: API Gateway endpoint URL for Prod stage for Categorize function
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/categorize/"
-  CategorizeFunction:
-    Description: Categorize Lambda Function ARN
-    Value: !GetAtt CategorizeFunction.Arn
-  CategorizeFunctionIamRole:
-    Description: Implicit IAM Role created for Categorize function
-    Value: !GetAtt CategorizeFunctionRole.Arn
-  # HelloWorldApi:
-  #   Description: API Gateway endpoint URL for Prod stage for Hello World function
-  #   Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  # HelloWorldFunction:
-  #   Description: Hello World Lambda Function ARN
-  #   Value: !GetAtt HelloWorldFunction.Arn
-  # HelloWorldFunctionIamRole:
-  #   Description: Implicit IAM Role created for Hello World function
-  #   Value: !GetAtt HelloWorldFunctionRole.Arn
+  FocusModeApiGateway:
+    Description: API Gateway endpoint URL for Prod stage for lambda functions
+    Value: !Sub "https://${FocusModeApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Staging/categorize/"
+  FocusModeApiGatewayRestApiId:
+    Description: API Gateway ARN for AWS API Gateway
+    Value: !Ref FocusModeApiGateway
+    Export:
+      Name: FocusModeApiGateway-RestApiId
+  FocusModeApiGatewayRootResourceId:
+    Value: !GetAtt FocusModeApiGateway.RootResourceId
+    Export:
+      Name: FocusModeApiGateway-RootResourceId
+
+  # CategorizeApi:
+  #   Description: API Gateway endpoint URL for Prod stage for Categorize function
+  #   Value: !Sub "https://${FocusModeApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod/categorize/"
+  # CategorizeFunction:
+  #   Description: Categorize Lambda Function ARN
+  #   Value: !GetAtt CategorizeFunction.Arn
+  # CategorizeFunctionIamRole:
+  #   Description: Implicit IAM Role created for Categorize function
+  #   Value: !GetAtt CategorizeFunctionRole.Arn

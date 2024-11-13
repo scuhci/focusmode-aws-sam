@@ -29,6 +29,11 @@ def lambda_handler(event, context):
     if event["queryStringParameters"] == None or "query" not in event["queryStringParameters"]:
         return {
             "statusCode": 400,
+            "headers": {
+                "Access-Control-Allow-Headers" : "Content-Type",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET"
+            },
             "body": json.dumps({
                 "message": "Missing the query parameter"
         }),
@@ -88,6 +93,11 @@ def lambda_handler(event, context):
 
     return {
         "statusCode": 200,
+        "headers": {
+            "Access-Control-Allow-Headers" : "Content-Type",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET"
+        },
         "body": json.dumps(
             result
         ),
