@@ -27,7 +27,7 @@ def lambda_handler(event, context):
     """
 
     # check to see if query parameters have been sent
-    missing_parameters_message = check_query_parameters(event["queryStringParameters"], ["query", "id"])
+    missing_parameters_message = check_query_parameters(event["queryStringParameters"], ["id", "query"])
     if missing_parameters_message:
         return missing_parameters_message
     

@@ -1,0 +1,18 @@
+# data type format:
+#  - data_type_name:
+#    value1: type
+#    value2: type
+#    ...
+#
+# possible value types: string, int, float, bool
+# note: a type can end in ? signaling that the value is optional
+
+data_types:
+  query:
+    query: string
+    current_focusmode: bool
+    algorithm_focusmode: bool?
+  session:
+    start_time: string
+    end_time: string
+    focusmode_time_sum: int

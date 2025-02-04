@@ -26,7 +26,6 @@ def check_query_parameters(event_query_string_parameters: list[str], required_pa
         }
     
     parameters_missing = set(required_parameters) - set(event_query_string_parameters)
-    print(parameters_missing)
     
     # missing some parameters
     if len(parameters_missing) != 0:
