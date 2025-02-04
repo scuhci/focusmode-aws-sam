@@ -1,6 +1,6 @@
 import json
 import yaml
-from focus_utils import check_query_parameters, check_id
+from focus_utils import CORS_HEADERS, check_query_parameters, check_id
 
 def lambda_handler(event, context):
     """Used to collect data for the FocusMode Study
@@ -32,31 +32,28 @@ def lambda_handler(event, context):
     # get query parameters and body
     id: str = event["queryStringParameters"]["id"]
     data_type: str = event["queryStringParameters"]["type"]
-    requested_body: dict = json.loads(event["body"])
-    
-    # check to see if the Prolific ID is valid
-    if not check_id(id):
+
+    try:
+        requested_body: dict = json.loads(event["body"])
+    except (ValueError, TypeError) as e:
         return {
-            "statusCode": 401,
-            "headers": {
-                "Access-Control-Allow-Headers" : "Content-Type",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET"
-            },
+            "statusCode": 400,
+            "headers": CORS_HEADERS,
             "body": json.dumps({
-                "message": f"Unauthorized"
+                "message": f"Invalid POST body. Must be JSON"
             }),
         }
+    
+    # check to see if the Prolific ID is valid
+    missing_id_message = check_id(id)
+    if missing_id_message:
+        return missing_id_message
     
     # check to make sure a body was sent
     if not requested_body:
         return {
             "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Headers" : "Content-Type",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET"
-            },
+            "headers": CORS_HEADERS,
             "body": json.dumps({
                 "message": f"POST body is missing"
             }),
@@ -71,11 +68,7 @@ def lambda_handler(event, context):
 
             return {
                 "statusCode": 400,
-                "headers": {
-                    "Access-Control-Allow-Headers" : "Content-Type",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET"
-                },
+                "headers": CORS_HEADERS,
                 "body": json.dumps({
                     "message": f"Yaml loading error",
                     "error": exc
@@ -101,40 +94,47 @@ def lambda_handler(event, context):
                 if val not in requested_body.keys() and val_type[-1] != "?":
                     return {
                         "statusCode": 400,
-                        "headers": {
-                            "Access-Control-Allow-Headers" : "Content-Type",
-                            "Access-Control-Allow-Origin": "*",
-                            "Access-Control-Allow-Methods": "GET"
-                        },
+                        "headers": CORS_HEADERS,
                         "body": json.dumps({
                             "message": f"Missing the value: {val}"
                         }),
                     }
-                
-                # check null value types and non-null value types
-                if ((val_type[-1] == "?" and requested_body[val] and not isinstance(requested_body[val], valid_data_type_values_map[val_type[:-1]]))
-                    or 
-                    (not isinstance(requested_body[val], valid_data_type_values_map[val_type]))):
+                            
+                # check null value types
+                if val_type[-1] == "?" and val in requested_body.keys() and not isinstance(requested_body[val], valid_data_type_values_map[val_type[:-1]]):
                     return {
                         "statusCode": 400,
-                        "headers": {
-                            "Access-Control-Allow-Headers" : "Content-Type",
-                            "Access-Control-Allow-Origin": "*",
-                            "Access-Control-Allow-Methods": "GET"
-                        },
+                        "headers": CORS_HEADERS,
                         "body": json.dumps({
                             "message": f"Invalid value type for value: {val}. Should be {val_type}"
                         }),
                     }
 
+                # check non-null value types
+                elif val in requested_body.keys() and not isinstance(requested_body[val], valid_data_type_values_map[val_type]):
+                    return {
+                        "statusCode": 400,
+                        "headers": CORS_HEADERS,
+                        "body": json.dumps({
+                            "message": f"Invalid value type for value: {val}. Should be {val_type}"
+                        }),
+                    }
+
+            # check if there is an extra key in the body
+            extra_values = set(requested_body.keys()) - set(valid_data_types[data_type])
+            if len(extra_values) != 0:
+                return {
+                    "statusCode": 400,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps({
+                        "message": f"Invalid value(s): {", ".join(extra_values)}"
+                    }),
+                }
+
             # the request body passed all the checks!
             return {
                 "statusCode": 200,
-                "headers": {
-                    "Access-Control-Allow-Headers" : "Content-Type",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET"
-                },
+                "headers": CORS_HEADERS,
                 "body": json.dumps(
                     "Runs!"
                 ),
@@ -143,11 +143,7 @@ def lambda_handler(event, context):
     # no keys matched
     return {
         "statusCode": 400,
-        "headers": {
-            "Access-Control-Allow-Headers" : "Content-Type",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET"
-        },
+        "headers": CORS_HEADERS,
         "body": json.dumps({
             "message": f"The data type key, {data_type}, is not a valid data type"
         }),

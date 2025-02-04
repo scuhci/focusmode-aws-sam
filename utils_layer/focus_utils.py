@@ -7,6 +7,12 @@ USER_TABLE_NAME = "focusmode-FocusModeUserTable-YL8KS5RZ7F8Y"               #os.
 DATA_TABLE_NAME = "focusmode-FocusModeDataCollectionTable-T0DCKU6KKMBYF"    #os.environ.get("DataTableName", None)
 ADMIN_TABLE_NAME = "focusmode-FocusModeAdminTable-1L8IZJNFRPT8F"            #os.environ.get("AdminTableName", None)
 
+CORS_HEADERS = {
+    "Access-Control-Allow-Headers" : "Content-Type",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET"
+}
+
 dynamodb = boto3.resource("dynamodb")
 admin_table = dynamodb.Table(ADMIN_TABLE_NAME)
 
@@ -15,11 +21,7 @@ def check_query_parameters(event_query_string_parameters: list[str], required_pa
     if event_query_string_parameters == None:
         return {
             "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Headers" : "Content-Type",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET"
-            },
+            "headers": CORS_HEADERS,
             "body": json.dumps({
                 "message": f"Missing the query parameter(s): {", ".join(required_parameters)}"
             }),
@@ -31,11 +33,7 @@ def check_query_parameters(event_query_string_parameters: list[str], required_pa
     if len(parameters_missing) != 0:
         return {
             "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Headers" : "Content-Type",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET"
-            },
+            "headers": CORS_HEADERS,
             "body": json.dumps({
                 "message": f"Missing the query parameter(s): {", ".join(parameters_missing)}"
             }),
@@ -47,5 +45,13 @@ def check_query_parameters(event_query_string_parameters: list[str], required_pa
 def check_id(prolific_id: str) -> bool:
     prolific_ids = admin_table.get_item(Key={"id": "prolific_ids"})
 
-    return prolific_id in prolific_ids['Item']['data']
-
+    if prolific_id in prolific_ids['Item']['data']:
+        return None
+    else:
+        return {
+            "statusCode": 401,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({
+                "message": f"Unauthorized"
+            }),
+        }

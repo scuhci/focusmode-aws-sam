@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-from focus_utils import check_query_parameters, check_id
+from focus_utils import CORS_HEADERS, check_query_parameters, check_id
 
 
 def lambda_handler(event, context):
@@ -36,18 +36,9 @@ def lambda_handler(event, context):
     query = event["queryStringParameters"]["query"]
     
     # check to see if the Prolific ID is valid
-    if not check_id(id):
-        return {
-            "statusCode": 401,
-            "headers": {
-                "Access-Control-Allow-Headers" : "Content-Type",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET"
-            },
-            "body": json.dumps({
-                "message": f"Unauthorized"
-            }),
-        }
+    missing_id_message = check_id(id)
+    if missing_id_message:
+        return missing_id_message
 
     # get env variables
     OPENAI_KEY = os.environ["OpenAIKey"]
@@ -100,11 +91,7 @@ def lambda_handler(event, context):
 
     return {
         "statusCode": 200,
-        "headers": {
-            "Access-Control-Allow-Headers" : "Content-Type",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET"
-        },
+        "headers": CORS_HEADERS,
         "body": json.dumps(
             result
         ),

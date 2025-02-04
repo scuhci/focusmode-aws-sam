@@ -1,5 +1,8 @@
 {
     "python.analysis.extraPaths": [
         "./utils_layer"
+    ],
+    "cSpell.words": [
+        "focusmode"
     ]
 }
