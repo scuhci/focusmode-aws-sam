@@ -54,6 +54,45 @@ Resources:
             RestApiId: !Ref FocusModeApiGateway
             Path: /categorize
             Method: GET
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeUserTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeDataCollectionTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeAdminTable
+
+  FocusModeUserTable:
+   Type: AWS::Serverless::SimpleTable
+   Properties:
+    PrimaryKey:
+      Name: UserId
+      Type: String
+  
+  FocusModeDataCollectionTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      KeySchema:
+        -
+          AttributeName: "UserId"
+          KeyType: "HASH"
+        -
+          AttributeName: "ValueId"
+          KeyType: "RANGE"
+      AttributeDefinitions:
+        -
+          AttributeName: "UserId"
+          AttributeType: "S"
+        -
+          AttributeName: "ValueId"
+          AttributeType: "S"
+      BillingMode: "PROVISIONED" 
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  FocusModeAdminTable:
+    Type: AWS::Serverless::SimpleTable
 
 Outputs:
   FocusModeApiGateway:
