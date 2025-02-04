@@ -22,6 +22,9 @@ Globals:
     Environment:
       Variables:
         OpenAIKey: !Ref OpenAIKey
+        UserTableName: !Ref FocusModeUserTable
+        DataTableName: !Ref FocusModeDataCollectionTable
+        AdminTableName: !Ref FocusModeAdminTable
   Api:
     Cors:
       AllowOrigin: "'*'"
@@ -38,6 +41,15 @@ Resources:
         AllowOrigin: "'*'"
         AllowHeaders: "'Content-Type'"
         AllowMethods: "'GET'"
+  
+  UtilsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: utils_layer
+      CompatibleRuntimes:
+        - python3.12
+    Metadata:
+      BuildMethod: python3.12
 
   CategorizeFunction:
     Type: AWS::Serverless::Function
@@ -47,6 +59,8 @@ Resources:
       Runtime: python3.12
       Architectures:
       - x86_64
+      Layers:
+      - !Ref UtilsLayer
       Events:
         CategorizeApi:
           Type: Api
@@ -107,6 +121,11 @@ Outputs:
     Value: !GetAtt FocusModeApiGateway.RootResourceId
     Export:
       Name: FocusModeApiGateway-RootResourceId
+  UtilsLayerArn:
+    Description: "Layer for utils"
+    Value: !Ref UtilsLayer
+    Export:
+      Name: !Sub '${AWS::StackName}-UtilsLayerArn'
 
   # CategorizeApi:
   #   Description: API Gateway endpoint URL for Prod stage for Categorize function

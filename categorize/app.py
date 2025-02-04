@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+from focus_utils import check_id
 
 
 def lambda_handler(event, context):
@@ -36,8 +37,10 @@ def lambda_handler(event, context):
             },
             "body": json.dumps({
                 "message": "Missing the query parameter"
-        }),
+            }),
         }
+    
+    print(check_id(""))
 
     # get env variables
     OPENAI_KEY = os.environ["OpenAIKey"]
@@ -61,20 +64,20 @@ def lambda_handler(event, context):
                 {'role': 'user', 'content': prompt}
             ],
             'response_format': {
-            'type': 'json_schema',
-            'json_schema': {
-                "name": "categorization",
-                "schema": {
-                "type": "object",
-                "properties": {
-                    "category": { "type": "string" },
-                    "explanation": { "type": "string" }
-                },
-                "required": ["category", "explanation"],
-                "additionalProperties": False
-                },
-                "strict": True
-            }
+                'type': 'json_schema',
+                'json_schema': {
+                    "name": "categorization",
+                    "schema": {
+                    "type": "object",
+                    "properties": {
+                        "category": { "type": "string" },
+                        "explanation": { "type": "string" }
+                    },
+                    "required": ["category", "explanation"],
+                    "additionalProperties": False
+                    },
+                    "strict": True
+                }
             }
         }
 
