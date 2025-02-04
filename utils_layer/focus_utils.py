@@ -2,7 +2,10 @@ import os
 import json
 import boto3
 
-ADMIN_TABLE_NAME = "focusmode-FocusModeAdminTable-1L8IZJNFRPT8F" #os.environ.get("AdminTableName", None)
+# constants:
+USER_TABLE_NAME = "focusmode-FocusModeUserTable-YL8KS5RZ7F8Y"               #os.environ.get("UserTableName", None)
+DATA_TABLE_NAME = "focusmode-FocusModeDataCollectionTable-T0DCKU6KKMBYF"    #os.environ.get("DataTableName", None)
+ADMIN_TABLE_NAME = "focusmode-FocusModeAdminTable-1L8IZJNFRPT8F"            #os.environ.get("AdminTableName", None)
 
 dynamodb = boto3.resource("dynamodb")
 admin_table = dynamodb.Table(ADMIN_TABLE_NAME)

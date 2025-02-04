@@ -51,10 +51,7 @@ def lambda_handler(event, context):
 
     # get env variables
     OPENAI_KEY = os.environ["OpenAIKey"]
-
-    # get query parameters
-    query = event["queryStringParameters"]["query"]
-
+    
     try:
         url = 'https://api.openai.com/v1/chat/completions'
         

@@ -76,6 +76,31 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeAdminTable
 
+  CollectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: collect/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Layers:
+      - !Ref UtilsLayer
+      Events:
+        CategorizeApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FocusModeApiGateway
+            Path: /collect
+            Method: POST
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeUserTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeDataCollectionTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeAdminTable
+
   FocusModeUserTable:
    Type: AWS::Serverless::SimpleTable
    Properties:
