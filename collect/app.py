@@ -1,6 +1,8 @@
 import json
 import yaml
-from focus_utils import CORS_HEADERS, check_query_parameters, check_id
+import boto3
+from datetime import datetime
+from focus_utils import CORS_HEADERS, DATA_TABLE_NAME, check_query_parameters, check_id
 
 def lambda_handler(event, context):
     """Used to collect data for the FocusMode Study
@@ -121,7 +123,7 @@ def lambda_handler(event, context):
                     }
 
             # check if there is an extra key in the body
-            extra_values = set(requested_body.keys()) - set(valid_data_types[data_type])
+            extra_values = set(requested_body.keys()) - set(valid_data_types[data_type].keys())
             if len(extra_values) != 0:
                 return {
                     "statusCode": 400,
@@ -131,7 +133,23 @@ def lambda_handler(event, context):
                     }),
                 }
 
-            # the request body passed all the checks!
+            # the requested body passed all the checks and is valid!
+            dynamodb = boto3.resource("dynamodb")
+            data_table = dynamodb.Table(DATA_TABLE_NAME)
+
+            current_time = datetime.now().isoformat(timespec='seconds')
+
+            data_table.put_item(
+                Item={
+                        "Id": f"{data_type}#{current_time}", # format: Value_Type#Timestamp
+                        "User_Id": "123", # TODO: change to be the prolific id
+                        "Timestamp": current_time,
+                        "Current_Stage": "", # TODO: get current_stage from user table
+                        "Value_Type": data_type,
+                        "Value": requested_body
+                    }
+                )
+
             return {
                 "statusCode": 200,
                 "headers": CORS_HEADERS,

@@ -1,5 +1,6 @@
 # data type format:
-#  - data_type_name:
+#  
+#  data_type_name:
 #    value1: type
 #    value2: type
 #    ...
@@ -8,11 +9,11 @@
 # note: a type can end in ? signaling that the value is optional
 
 data_types:
-  query:
-    query: string
-    current_focusmode: bool
-    algorithm_focusmode: bool?
-  session:
-    start_time: string
-    end_time: string
-    focusmode_time_sum: int
+  Query:
+    Query: string
+    Current_FocusMode: bool
+    Algorithm_FocusMode: bool?
+  Session:
+    Start_Time: string
+    End_Time: string
+    FocusMode_Time_Sum: int

@@ -130,11 +130,24 @@ See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-applica
 Next, you can use AWS Serverless Application Repository to deploy ready to use Apps that go beyond hello world samples and learn how authors developed their applications: [AWS Serverless Application Repository main page](https://aws.amazon.com/serverless/serverlessrepo/)
 
 
-# Other
+# Helpful Commands
+Run local lambda functions via a docker container with environment variables.
+
+Note: you must have docker running in the background.
+
 ```bash
 sam local start-api --env-vars env.json
 ```
 
+Rebuilds the AWS SAM project locally from scratch.
 ```bash
-sam deploy --parameter-overrides EnvVarOne=your-env-var-one
+sam build --no-cached
+```
+
+Deploy the AWS SAM project to the cloud with environment variables.
+
+Note: the --guided flag walks you through what will be deployed
+
+```bash
+sam deploy --parameter-overrides EnvVarOne=your-env-var-one --guided
 ```

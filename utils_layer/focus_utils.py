@@ -4,7 +4,7 @@ import boto3
 
 # constants:
 USER_TABLE_NAME = "focusmode-FocusModeUserTable-YL8KS5RZ7F8Y"               #os.environ.get("UserTableName", None)
-DATA_TABLE_NAME = "focusmode-FocusModeDataCollectionTable-T0DCKU6KKMBYF"    #os.environ.get("DataTableName", None)
+DATA_TABLE_NAME = "focusmode-FocusModeDataCollectionTable-1KRCB5ZWJ6ONL"    #os.environ.get("DataTableName", None)
 ADMIN_TABLE_NAME = "focusmode-FocusModeAdminTable-1L8IZJNFRPT8F"            #os.environ.get("AdminTableName", None)
 
 CORS_HEADERS = {

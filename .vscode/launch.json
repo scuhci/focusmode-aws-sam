@@ -1,0 +1,146 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "focusmode-lambda:FocusModeApiGateway",
+            "invokeTarget": {
+                "target": "template",
+                "templatePath": "${workspaceFolder}/template.yaml",
+                "logicalId": "FocusModeApiGateway"
+            },
+            "lambda": {
+                "payload": {},
+                "environmentVariables": {}
+            }
+        },
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "focusmode-lambda:UtilsLayer",
+            "invokeTarget": {
+                "target": "template",
+                "templatePath": "${workspaceFolder}/template.yaml",
+                "logicalId": "UtilsLayer"
+            },
+            "lambda": {
+                "payload": {},
+                "environmentVariables": {}
+            }
+        },
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "focusmode-lambda:CategorizeFunction (python3.12)",
+            "invokeTarget": {
+                "target": "template",
+                "templatePath": "${workspaceFolder}/template.yaml",
+                "logicalId": "CategorizeFunction"
+            },
+            "lambda": {
+                "payload": {},
+                "environmentVariables": {}
+            }
+        },
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "API focusmode-lambda:CategorizeFunction (python3.12)",
+            "invokeTarget": {
+                "target": "api",
+                "templatePath": "${workspaceFolder}/template.yaml",
+                "logicalId": "CategorizeFunction"
+            },
+            "api": {
+                "path": "/categorize",
+                "httpMethod": "GET",
+                "payload": {
+                    "json": {}
+                }
+            },
+            "lambda": {
+                "runtime": "python3.12"
+            }
+        },
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "focusmode-lambda:CollectFunction (python3.12)",
+            "invokeTarget": {
+                "target": "template",
+                "templatePath": "${workspaceFolder}/template.yaml",
+                "logicalId": "CollectFunction"
+            },
+            "lambda": {
+                "payload": {},
+                "environmentVariables": {}
+            }
+        },
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "API focusmode-lambda:CollectFunction (python3.12)",
+            "invokeTarget": {
+                "target": "api",
+                "templatePath": "${workspaceFolder}/template.yaml",
+                "logicalId": "CollectFunction"
+            },
+            "api": {
+                "path": "/collect",
+                "httpMethod": "POST",
+                "payload": {
+                    "json": {}
+                }
+            },
+            "lambda": {
+                "runtime": "python3.12"
+            }
+        },
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "focusmode-lambda:FocusModeUserTable",
+            "invokeTarget": {
+                "target": "template",
+                "templatePath": "${workspaceFolder}/template.yaml",
+                "logicalId": "FocusModeUserTable"
+            },
+            "lambda": {
+                "payload": {},
+                "environmentVariables": {}
+            }
+        },
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "focusmode-lambda:FocusModeDataCollectionTable",
+            "invokeTarget": {
+                "target": "template",
+                "templatePath": "${workspaceFolder}/template.yaml",
+                "logicalId": "FocusModeDataCollectionTable"
+            },
+            "lambda": {
+                "payload": {},
+                "environmentVariables": {}
+            }
+        },
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "focusmode-lambda:FocusModeAdminTable",
+            "invokeTarget": {
+                "target": "template",
+                "templatePath": "${workspaceFolder}/template.yaml",
+                "logicalId": "FocusModeAdminTable"
+            },
+            "lambda": {
+                "payload": {},
+                "environmentVariables": {}
+            }
+        }
+    ]
+}
