@@ -32,8 +32,8 @@ def lambda_handler(event, context):
         return missing_parameters_message
     
     # get query parameters
-    id = event["queryStringParameters"]["id"]
-    query = event["queryStringParameters"]["query"]
+    id: str = event["queryStringParameters"]["id"]
+    query: str = event["queryStringParameters"]["query"]
     
     # check to see if the Prolific ID is valid
     missing_id_message = check_id(id)

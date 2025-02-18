@@ -1,6 +1,9 @@
 import json
+import random
+from datetime import datetime
 import boto3
-from focus_utils import CORS_HEADERS, USER_TABLE_NAME, check_query_parameters, check_id
+from botocore.exceptions import ClientError
+from focus_utils import CORS_HEADERS, USER_TABLE_NAME, check_query_parameters, check_id, get_current_datetime
 
 
 def lambda_handler(event, context):
@@ -41,11 +44,47 @@ def lambda_handler(event, context):
         return missing_id_message
     
     # check to see if the participant has onboarded before
-    
-    return {
-        "statusCode": 200,
-        "headers": CORS_HEADERS,
-        "body": json.dumps(
-            "Received"
-        ),
-    }
+    dynamodb = boto3.resource("dynamodb")
+    user_table = dynamodb.Table(USER_TABLE_NAME)
+
+    try:
+        user_table.get_item(Key={"User_Id": id})
+        
+        return {
+            "statusCode": 400,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({
+                "message": "User has already onboarded"
+            }),
+        }
+    except ClientError as e:
+        # item does not exist -> user has not onboarded before
+        if e.response['Error']['Code'] == "ResourceNotFoundException":
+            # randomly generate order of stage
+            stage_order = list(range(1, 6))
+            random.shuffle(stage_order)
+
+            # add participant to the user database
+            user_table.put_item(
+                Item={
+                        "User_Id": id,
+                        "Stage_Order_List": stage_order,
+                        # start at first stage
+                        "Stage_Id_List": {
+                            "Stage_Number": stage_order[0],
+                            "Current_Day": 1,
+                            "Stage_Days_Start_Time": [get_current_datetime()]
+                        },
+                        "Regular_Categories": regular_categories,
+                        "FocusMode_Categories": focusmode_categories
+                    }
+                )
+            
+            return {
+                "statusCode": 200,
+                "headers": CORS_HEADERS,
+                "body": json.dumps(
+                    "Received"
+                ),
+            }
+        

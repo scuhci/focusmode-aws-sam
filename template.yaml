@@ -1,8 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
+Description: |
   focusmode
-
   SAM Template for Santa Clara University's HCI Lab's FocusMode project
 
 Parameters:
@@ -27,9 +26,9 @@ Globals:
         AdminTableName: !Ref FocusModeAdminTable
   Api:
     Cors:
-      AllowOrigin: "'*'"
-      AllowHeaders: "'Content-Type'"
-      AllowMethods: "'GET'"
+      AllowOrigin: '''*'''
+      AllowHeaders: '''Content-Type'''
+      AllowMethods: '''GET'''
 
 Resources:
   FocusModeApiGateway:
@@ -38,10 +37,10 @@ Resources:
       Name: FocusMode Api Gateway
       StageName: Prod
       Cors:
-        AllowOrigin: "'*'"
-        AllowHeaders: "'Content-Type'"
-        AllowMethods: "'GET'"
-  
+        AllowOrigin: '''*'''
+        AllowHeaders: '''Content-Type'''
+        AllowMethods: '''GET'''
+
   UtilsLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -100,7 +99,7 @@ Resources:
             TableName: !Ref FocusModeDataCollectionTable
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeAdminTable
-    
+
   OnboardFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -157,7 +156,7 @@ Resources:
 Outputs:
   FocusModeApiGateway:
     Description: API Gateway endpoint URL for Prod stage for lambda functions
-    Value: !Sub "https://${FocusModeApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Staging/categorize/"
+    Value: !Sub https://${FocusModeApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Staging/categorize/
   FocusModeApiGatewayRestApiId:
     Description: API Gateway ARN for AWS API Gateway
     Value: !Ref FocusModeApiGateway
@@ -171,8 +170,7 @@ Outputs:
     Description: Layer for utils
     Value: !Ref UtilsLayer
     Export:
-      Name: !Sub '${AWS::StackName}-UtilsLayerArn'
-
+      Name: !Sub ${AWS::StackName}-UtilsLayerArn
   # CategorizeApi:
   #   Description: API Gateway endpoint URL for Prod stage for Categorize function
   #   Value: !Sub "https://${FocusModeApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod/categorize/"

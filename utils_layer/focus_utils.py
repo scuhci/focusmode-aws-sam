@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import datetime
 import boto3
 
 # constants:
@@ -55,3 +56,9 @@ def check_id(prolific_id: str) -> bool:
                 "message": f"Unauthorized"
             }),
         }
+
+def format_datetime(datetime: datetime) -> str: 
+    return datetime.isoformat(timespec='seconds')
+
+def get_current_datetime() -> str:
+    return format_datetime(datetime.now())
