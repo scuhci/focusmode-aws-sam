@@ -1,8 +1,7 @@
 import json
 import yaml
 import boto3
-from datetime import datetime
-from focus_utils import CORS_HEADERS, DATA_TABLE_NAME, check_query_parameters, check_id, get_current_datetime
+from focus_utils import CORS_HEADERS, DATA_TABLE_NAME, check_query_parameters, check_id, get_current_datetime_str
 
 def lambda_handler(event, context):
     """Used to collect data for the FocusMode Study
@@ -137,7 +136,7 @@ def lambda_handler(event, context):
             dynamodb = boto3.resource("dynamodb")
             data_table = dynamodb.Table(DATA_TABLE_NAME)
 
-            current_time = get_current_datetime()
+            current_time = get_current_datetime_str()
 
             data_table.put_item(
                 Item={

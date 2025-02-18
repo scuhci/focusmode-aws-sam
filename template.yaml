@@ -118,9 +118,32 @@ Resources:
             Path: /onboard
             Method: GET
       Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref FocusModeUserTable
         - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeUserTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeAdminTable
+
+  StageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: stage/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        CategorizeApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FocusModeApiGateway
+            Path: /stage
+            Method: GET
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeUserTable
+        - DynamoDBReadPolicy:
             TableName: !Ref FocusModeDataCollectionTable
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeAdminTable

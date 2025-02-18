@@ -57,8 +57,11 @@ def check_id(prolific_id: str) -> bool:
             }),
         }
 
-def format_datetime(datetime: datetime) -> str: 
+def format_datetime_str(datetime: datetime) -> str: 
     return datetime.isoformat(timespec='seconds')
 
-def get_current_datetime() -> str:
-    return format_datetime(datetime.now())
+def get_current_datetime_str() -> str:
+    return format_datetime_str(datetime.now())
+
+def get_datetime_obj(datetime_str: str) -> datetime:
+    return datetime.fromisoformat(datetime_str)

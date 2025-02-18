@@ -1,8 +1,7 @@
 import json
 import random
 import boto3
-from botocore.exceptions import ClientError
-from focus_utils import CORS_HEADERS, USER_TABLE_NAME, check_query_parameters, check_id, get_current_datetime
+from focus_utils import CORS_HEADERS, USER_TABLE_NAME, check_query_parameters, check_id, get_current_datetime_str
 
 
 def lambda_handler(event, context):
@@ -72,7 +71,7 @@ def lambda_handler(event, context):
                     "Stage_Id_List": {
                         "Stage_Number": stage_order[0],
                         "Current_Day": 1,
-                        "Stage_Days_Start_Time": [get_current_datetime()]
+                        "Stage_Days_Start_Time": [get_current_datetime_str()]
                     },
                     "Regular_Categories": regular_categories,
                     "FocusMode_Categories": focusmode_categories
