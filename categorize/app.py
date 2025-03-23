@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-from focus_utils import CORS_HEADERS, check_query_parameters, check_id
+from focus_utils import CORS_HEADERS, check_query_parameters, check_id, update_last_active_time, update_user_stage
 
 
 def lambda_handler(event, context):
@@ -43,6 +43,18 @@ def lambda_handler(event, context):
     # get env variables
     OPENAI_KEY = os.environ["OpenAIKey"]
     
+
+    # update the last active timestamp for user
+    update_last_active_time(id)
+
+    # update the stgae info if it in time stamp.
+    Stage_Status_Response = update_user_stage(id)
+    parsed_body = json.loads(Stage_Status_Response["body"]) 
+
+    # Now you can safely access "data"
+    data = parsed_body["data"]
+    message = parsed_body["message"]
+
     try:
         url = 'https://api.openai.com/v1/chat/completions'
         
@@ -92,7 +104,9 @@ def lambda_handler(event, context):
     return {
         "statusCode": 200,
         "headers": CORS_HEADERS,
-        "body": json.dumps(
-            result
-        ),
+        "body": json.dumps({
+            "stage_status": data,
+            "stage_status_message": message,
+            "result": result
+    }),
     }

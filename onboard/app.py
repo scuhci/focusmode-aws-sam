@@ -1,7 +1,7 @@
 import json
 import random
 import boto3
-from focus_utils import CORS_HEADERS, USER_TABLE_NAME, check_query_parameters, check_id, get_current_datetime_str
+from focus_utils import CORS_HEADERS, USER_TABLE_NAME, check_query_parameters, check_id, get_current_datetime_str, update_last_active_time
 
 
 def lambda_handler(event, context):
@@ -49,6 +49,7 @@ def lambda_handler(event, context):
     
     # if user exists
     if 'Item' in user_item:
+        update_last_active_time(id)
         return {
             "statusCode": 400,
             "headers": CORS_HEADERS,
@@ -59,20 +60,22 @@ def lambda_handler(event, context):
     else:
         # item does not exist -> user has not onboarded before
         # randomly generate order of stage
-        stage_order = list(range(1, 6))
+        stage_order = list(range(1, 4))
         random.shuffle(stage_order)
 
+        current_timestamp = get_current_datetime_str()
         # add participant to the user database
         user_table.put_item(
             Item={
                     "User_Id": id,
                     "Stage_Order_List": stage_order,
+                    "Last_Active_At_Time": current_timestamp,
                     # start at first stage
-                    "Stage_Id_List": {
+                    "Stage_Id_List": [{
                         "Stage_Number": stage_order[0],
                         "Current_Day": 1,
-                        "Stage_Days_Start_Time": [get_current_datetime_str()]
-                    },
+                        "Stage_Days_Start_Time": [current_timestamp]
+                    }],
                     "Regular_Categories": regular_categories,
                     "FocusMode_Categories": focusmode_categories
                 }
