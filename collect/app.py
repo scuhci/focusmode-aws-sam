@@ -1,7 +1,7 @@
 import json
 import yaml
 import boto3
-from focus_utils import CORS_HEADERS, DATA_TABLE_NAME, check_query_parameters, check_id, get_current_datetime_str
+from focus_utils import CORS_HEADERS, DATA_TABLE_NAME, check_query_parameters, check_id, get_current_datetime_str, update_last_active_time, update_user_stage
 
 def lambda_handler(event, context):
     """Used to collect data for the FocusMode Study
@@ -33,6 +33,17 @@ def lambda_handler(event, context):
     # get query parameters and body
     id: str = event["queryStringParameters"]["id"]
     data_type: str = event["queryStringParameters"]["type"]
+
+    # update the last active timestamp for user
+    update_last_active_time(id)
+
+    # update the stgae info if it in time stamp.
+    Stage_Status_Response = update_user_stage(id)
+    parsed_body = json.loads(Stage_Status_Response["body"]) 
+
+    # Now you can safely access "data"
+    data = parsed_body["data"]
+    message = parsed_body["message"]
 
     try:
         requested_body: dict = json.loads(event["body"])
@@ -152,9 +163,11 @@ def lambda_handler(event, context):
             return {
                 "statusCode": 200,
                 "headers": CORS_HEADERS,
-                "body": json.dumps(
-                    "Runs!"
-                ),
+                "body": json.dumps({
+                    "stage_status": data, # Sending stage status into response
+                    "stage_status_message": message,
+                    "message": "Runs!"
+            }),
             }
                     
     # no keys matched
