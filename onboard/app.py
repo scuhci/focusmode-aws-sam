@@ -78,7 +78,7 @@ def lambda_handler(event, context):
     else:
         # item does not exist -> user has not onboarded before
         # randomly generate order of stage
-        stage_order = list(range(1, 5))
+        stage_order = list(range(1, 5)) # 5 - 1 = 4 stages starting at #1
         random.shuffle(stage_order)
         current_timestamp = get_current_datetime_str()
         verification_code = generate_verification_code(id)
