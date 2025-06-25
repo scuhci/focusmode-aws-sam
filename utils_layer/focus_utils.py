@@ -1,8 +1,10 @@
 import os
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import boto3
 from decimal import Decimal
+import hashlib
+import time
 
 # constants:
 USER_TABLE_NAME = "focusmode-FocusModeUserTable-6JC0TNI2RB93"               #os.environ.get("UserTableName", None)
@@ -27,7 +29,6 @@ def update_last_active_time(user_id : str):
 
     try:
         current_timestamp = get_current_datetime_str()
-
         response = user_table.update_item(
             Key={"User_Id": user_id},
             UpdateExpression="SET Last_Active_At_Time = :ts",
@@ -41,23 +42,6 @@ def update_last_active_time(user_id : str):
         return {"error": f"Failed to update Last_Active_At_Time: {str(e)}"}
 
 
-def is_end_time_between(last_logged_time_str: str, last_active_timestamp: str) -> bool:
-    """
-    Checks if the last activity was within 24 hours of the last logged date in Stage_Days_Start_Time.
-
-    :param stage_days_start_time: List of timestamps in ISO format for the current stage.
-    :param last_active_timestamp: User's last active timestamp in ISO format.
-    :return: True if last active time is within 24 hours of the last stage entry, else False.
-    """
-
-    last_logged_time = get_datetime_obj(last_logged_time_str)  # last stage entry
-    last_active_time = get_datetime_obj(last_active_timestamp)  # Convert last active timestamp to datetime
-
-    # Calculate the valid window (24-hour range)
-    valid_until = last_logged_time + timedelta(hours=24)
-
-    return last_logged_time <= last_active_time < valid_until
-
 def get_next_stage(user_stage_orders, current_stage):
     for i, stage_number in enumerate(user_stage_orders):
         if stage_number == current_stage and i != len(user_stage_orders)-2:
@@ -70,14 +54,44 @@ def decimal_to_int(obj):
     raise TypeError("Type not serializable")
 
 
-def getStageResponseObject(response_object, user_id):
+def getStageResponseObject(response_object, user_id, is_stage_changed, is_study_completed):
     data = {
-            "User_Id": user_id,
-            "Current_Stage_Number": response_object["Stage_Number"],
-            "Current_Day_Of_Stage": response_object["Current_Day"],
-            "Start_Time_For_Stage_Days": response_object["Stage_Days_Start_Time"]
+            "user_Id": user_id,
+            "current_stage": response_object["Current_Stage"],
+            "is_stage_changed": is_stage_changed,
+            "is_study_completed": is_study_completed
         }
     return data
+
+def get_current_study_stage(stage_start_times: dict[str, str], last_active_str: str) -> int:
+    last_active = get_datetime_obj(last_active_str)
+    
+    # Convert to list of tuples: (stage_number, datetime_object)
+    stage_entries = [
+        (stage, get_datetime_obj(start_time)) for stage, start_time in stage_start_times.items()
+    ]
+
+    # Sort by datetime so we can find the latest stage that started before last active
+    stage_entries.sort(key=lambda x: x[1])
+
+    current_stage = 0
+    for stage, start_dt in stage_entries:
+        if last_active >= start_dt:
+            current_stage = int(stage)
+        else:
+            break
+
+    return current_stage
+
+
+def is_study_over(stage_start_times: dict[str, str], stage_sequence: list[int], last_active_str: str) -> bool:
+    last_active = get_datetime_obj(last_active_str)
+    
+    final_stage = stage_sequence[-1]
+    final_start = get_datetime_obj(stage_start_times[str(final_stage)])
+    final_end = final_start + timedelta(days=7)
+
+    return last_active >= final_end
 
 def update_user_stage(user_id : str):
     missing_id_message = check_id(user_id)
@@ -89,92 +103,74 @@ def update_user_stage(user_id : str):
         response = user_table.get_item(Key={"User_Id": user_id})
         response = response["Item"]
        
-        stage_id_list = response["Stage_Id_List"]
+        current_study_stage = response.get("Current_Stage")
         user_stage_order_list = response["Stage_Order_List"]
-        current_timestamp = get_current_datetime_str()
-        
-        if not stage_id_list:
-            # Create New Stage object, insert it into stage id list and return to client
-            new_stage = {
-                        "Stage_Number": user_stage_order_list[0],
-                        "Current_Day": 1,
-                        "Stage_Days_Start_Time": [current_timestamp]
-                    }
-            
+        stage_start_times = response["Stage_Start_Times"]
+        last_active_timestamp = response["Last_Active_At_Time"]
+
+        stage = get_current_study_stage(stage_start_times, last_active_timestamp)
+        is_study_completed = is_study_over(stage_start_times, user_stage_order_list, last_active_timestamp)
+
+        if not current_study_stage and stage == 0:
+            first_stage = user_stage_order_list[0]
             response = user_table.update_item(
                 Key={"User_Id": user_id},
-                UpdateExpression="SET Stage_Id_List = list_append(Stage_Id_List, :new_stage)",
-                ExpressionAttributeValues={":new_stage": [new_stage]},
+                UpdateExpression="SET Current_Stage = :new_stage",
+                ExpressionAttributeValues={":new_stage": first_stage},
                 ReturnValues="ALL_NEW"
             )
             databaseAttributes = response["Attributes"]
-            stage_obj = databaseAttributes["Stage_Id_List"][-1]
-            data = getStageResponseObject(stage_obj, user_id)
             
+            data = getStageResponseObject(databaseAttributes, user_id, True, False)
             return {
                 "statusCode": 200,
                 "headers": CORS_HEADERS,
                 "body": json.dumps({
                     "data": data,
-                    "message": f"New stage for the user created successfully."
+                    "message": f"First stage for the user started successfully."
                 },  default=decimal_to_int),
             }
         
-        latest_stage = stage_id_list[-1]
-        stage_day_start_times = latest_stage["Stage_Days_Start_Time"]
-        last_day_start_time = stage_day_start_times[-1]
-        last_active_timestamp = response["Last_Active_At_Time"]
+        if is_study_completed:
+            response = user_table.update_item(
+                Key={"User_Id": user_id},
+                UpdateExpression=(
+                    f"SET Current_Stage = :new_stage,"
+                    f"User_Completed_Stages = list_append(User_Completed_Stages, :last_stage)"
+                ),
+                ExpressionAttributeValues={
+                    ":new_stage": stage,
+                    ":last_stage": [current_study_stage]
+                },
+                ReturnValues="ALL_NEW"
+            )
+            databaseAttributes = response["Attributes"]
+            data = getStageResponseObject(databaseAttributes, user_id, True, True)
+            return {
+                    "statusCode": 200,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps({
+                        "data": data,
+                        "message": f"Study for the user with id: {user_id} completed."
+                    }, default=decimal_to_int),
+                }
 
-        if not is_end_time_between(last_day_start_time, last_active_timestamp):
-            if latest_stage["Current_Day"] < 7:
-                # update the curr_day += 1
-                # add new start time of curr_time to start time list
-                last_index = len(stage_id_list) - 1
-                response = user_table.update_item(
-                    Key={"User_Id": user_id},
-                    UpdateExpression=(
-                        f"SET Stage_Id_List[{last_index}].Stage_Days_Start_Time = list_append(Stage_Id_List[{last_index}].Stage_Days_Start_Time, :new_time),"
-                        f"Stage_Id_List[{last_index}].Current_Day = Stage_Id_List[{last_index}].Current_Day + :inc_day"
-                    ),
-                    ExpressionAttributeValues={
-                        ":new_time": [current_timestamp],
-                        ":inc_day": 1,
-                    },
-                    ReturnValues="ALL_NEW"
-                )
-                
-                databaseAttributes = response["Attributes"]
-                stage_obj = databaseAttributes["Stage_Id_List"][-1]
-                data = getStageResponseObject(stage_obj, user_id)
-                return {
-                        "statusCode": 200,
-                        "headers": CORS_HEADERS,
-                        "body": json.dumps({
-                            "data": data,
-                            "message": f"User processed to next day of current stage",
-                        }, default=decimal_to_int),
-                    }
-            else:
-                
-                current_stage_number = latest_stage["Stage_Number"]
-                next_stage_number = get_next_stage(user_stage_order_list, current_stage_number)
-                
-                if next_stage_number:
-                    new_stage = {
-                        "Stage_Number": next_stage_number,
-                        "Current_Day": 1,
-                        "Stage_Days_Start_Time": [current_timestamp]
-                    }
-                    response = user_table.update_item(
-                        Key={"User_Id": user_id},
-                        UpdateExpression="SET Stage_Id_List = list_append(Stage_Id_List, :new_stage)",
-                        ExpressionAttributeValues={":new_stage": [new_stage]},
-                        ReturnValues="ALL_NEW"
-                    )
-                    databaseAttributes = response["Attributes"]
-                    stage_obj = databaseAttributes["Stage_Id_List"][-1]
-                    data = getStageResponseObject(stage_obj, user_id)
-                    return {
+        if stage != current_study_stage:
+            response = user_table.update_item(
+                Key={"User_Id": user_id},
+                UpdateExpression=(
+                    f"SET Current_Stage = :new_stage,"
+                    f"User_Completed_Stages = list_append(User_Completed_Stages, :last_stage)"
+                ),
+                ExpressionAttributeValues={
+                    ":new_stage": stage,
+                    ":last_stage": [current_study_stage]
+                },
+                ReturnValues="ALL_NEW"
+            )
+            databaseAttributes = response["Attributes"]
+            data = getStageResponseObject(databaseAttributes, user_id, True, False)
+            return {
                         "statusCode": 200,
                         "headers": CORS_HEADERS,
                         "body": json.dumps({
@@ -182,20 +178,10 @@ def update_user_stage(user_id : str):
                             "message": f"started a new stage for the user as previous is completed",
                         }, default=decimal_to_int),
                     }
-                else:
-                    data = getStageResponseObject(latest_stage, user_id)
-                    return {
-                        "statusCode": 200,
-                        "headers": CORS_HEADERS,
-                        "body": json.dumps({
-                            "data": data,
-                            "message": f"Study for the user with id: {user_id} completed."
-                        }, default=decimal_to_int),
-                    }
         else:
             # No need to change any stage information
             # return response with user_id:
-            data = getStageResponseObject(latest_stage, user_id)
+            data = getStageResponseObject(response, user_id, False, False)
             return {
                 "statusCode": 200,
                 "headers": CORS_HEADERS,
@@ -204,10 +190,19 @@ def update_user_stage(user_id : str):
                     "message": f"No stage update as user is still in the current stage time limit"
                 }, default=decimal_to_int),
             }
-            
-    
+
+        
     except Exception as e:
-        return {"error": f"Failed to update user stgae information for user {user_id}: {str(e)}"}
+        return {
+            "statusCode": 500,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({
+                "data": {
+                    "error": f"Failed to update user stage information for user {user_id}: {str(e)}",
+                },
+                "message": "ERROR: Failed to update user stage information"
+            }),
+        }
 
 def check_query_parameters(event_query_string_parameters: list[str], required_parameters: list[str]):
     # missing all parameters
@@ -248,6 +243,23 @@ def check_id(prolific_id: str) -> bool:
                 "message": f"Unauthorized"
             }),
         }
+
+
+# Utility to generate a unique verification code (e.g., SHA-256 of prolificId + timestamp)
+def generate_verification_code(prolific_id: str) -> str:
+    timestamp = str(int(time.time() * 1000)) 
+    to_hash = f"{prolific_id}-{timestamp}"
+    hash_value = hashlib.sha256(to_hash.encode()).hexdigest()
+    return hash_value
+
+
+def generate_weekly_stage_start_times(start_ts_str: str, stage_order_list: list[int]) -> dict[str, str]:
+    start_dt = get_datetime_obj(start_ts_str)
+    stage_map = {}
+    for i, stage in enumerate(stage_order_list):
+        stage_start = start_dt + timedelta(days=7 * i)
+        stage_map[str(stage)] = format_datetime_str(stage_start)
+    return stage_map
 
 def format_datetime_str(datetime: datetime) -> str: 
     return datetime.isoformat(timespec='seconds')
