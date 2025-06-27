@@ -201,58 +201,58 @@ Resources:
         WriteCapacityUnits: 5
 
   FocusModeDailySurveyResponseTable:
-  Type: AWS::DynamoDB::Table
-  Properties:
-    KeySchema:
-      - AttributeName: prolificId
-        KeyType: HASH
-      - AttributeName: Id
-        KeyType: RANGE
-    AttributeDefinitions:
-      - AttributeName: prolificId
-        AttributeType: S
-      - AttributeName: Id
-        AttributeType: S
-    BillingMode: PROVISIONED
-    ProvisionedThroughput:
-      ReadCapacityUnits: 5
-      WriteCapacityUnits: 5
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: prolificId
+          KeyType: HASH
+        - AttributeName: Id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: prolificId
+          AttributeType: S
+        - AttributeName: Id
+          AttributeType: S
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
   FocusModePostStageSurveyResponseTable:
-  Type: AWS::DynamoDB::Table
-  Properties:
-    KeySchema:
-      - AttributeName: prolificId
-        KeyType: HASH
-      - AttributeName: Id
-        KeyType: RANGE
-    AttributeDefinitions:
-      - AttributeName: prolificId
-        AttributeType: S
-      - AttributeName: Id
-        AttributeType: S
-    BillingMode: PROVISIONED
-    ProvisionedThroughput:
-      ReadCapacityUnits: 5
-      WriteCapacityUnits: 5
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: prolificId
+          KeyType: HASH
+        - AttributeName: Id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: prolificId
+          AttributeType: S
+        - AttributeName: Id
+          AttributeType: S
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
   FocusModeUserPreferenceDataTable:
-  Type: AWS::DynamoDB::Table
-  Properties:
-    KeySchema:
-      - AttributeName: prolificId
-        KeyType: HASH
-      - AttributeName: Id
-        KeyType: RANGE
-    AttributeDefinitions:
-      - AttributeName: prolificId
-        AttributeType: S
-      - AttributeName: Id
-        AttributeType: S
-    BillingMode: PROVISIONED
-    ProvisionedThroughput:
-      ReadCapacityUnits: 5
-      WriteCapacityUnits: 5
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: prolificId
+          KeyType: HASH
+        - AttributeName: Id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: prolificId
+          AttributeType: S
+        - AttributeName: Id
+          AttributeType: S
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
   FocusModeAdminTable:
     Type: AWS::Serverless::SimpleTable
