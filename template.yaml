@@ -9,6 +9,10 @@ Parameters:
     Type: String
     Description: API Key for OpenAI
     Default: abc
+  YouTubeApiKey:
+    Type: String
+    Description: API Key for youtube
+    Default: abc
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -21,8 +25,12 @@ Globals:
     Environment:
       Variables:
         OpenAIKey: !Ref OpenAIKey
+        YouTubeApiKey: !Ref YouTubeApiKey
         UserTableName: !Ref FocusModeUserTable
         DataTableName: !Ref FocusModeDataCollectionTable
+        DailySurveyDataTableName: !Ref FocusModeDailySurveyResponseTable
+        PostStageSurveyDataTableName: !Ref FocusModePostStageSurveyResponseTable
+        UserPreferenceDataTableName: !Ref FocusModeUserPreferenceDataTable
         AdminTableName: !Ref FocusModeAdminTable
   Api:
     Cors:
@@ -73,6 +81,12 @@ Resources:
             TableName: !Ref FocusModeUserTable
         - DynamoDBWritePolicy:
             TableName: !Ref FocusModeDataCollectionTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeDailySurveyResponseTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModePostStageSurveyResponseTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeUserPreferenceDataTable
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeAdminTable
 
@@ -98,6 +112,10 @@ Resources:
             TableName: !Ref FocusModeUserTable
         - DynamoDBWritePolicy:
             TableName: !Ref FocusModeDataCollectionTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeDailySurveyResponseTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModePostStageSurveyResponseTable
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeAdminTable
 
@@ -151,6 +169,10 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeDataCollectionTable
         - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeDailySurveyResponseTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModePostStageSurveyResponseTable
+        - DynamoDBReadPolicy:
             TableName: !Ref FocusModeAdminTable
 
   FocusModeUserTable:
@@ -177,6 +199,60 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
+
+  FocusModeDailySurveyResponseTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    KeySchema:
+      - AttributeName: prolificId
+        KeyType: HASH
+      - AttributeName: Id
+        KeyType: RANGE
+    AttributeDefinitions:
+      - AttributeName: prolificId
+        AttributeType: S
+      - AttributeName: Id
+        AttributeType: S
+    BillingMode: PROVISIONED
+    ProvisionedThroughput:
+      ReadCapacityUnits: 5
+      WriteCapacityUnits: 5
+
+  FocusModePostStageSurveyResponseTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    KeySchema:
+      - AttributeName: prolificId
+        KeyType: HASH
+      - AttributeName: Id
+        KeyType: RANGE
+    AttributeDefinitions:
+      - AttributeName: prolificId
+        AttributeType: S
+      - AttributeName: Id
+        AttributeType: S
+    BillingMode: PROVISIONED
+    ProvisionedThroughput:
+      ReadCapacityUnits: 5
+      WriteCapacityUnits: 5
+
+  FocusModeUserPreferenceDataTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    KeySchema:
+      - AttributeName: prolificId
+        KeyType: HASH
+      - AttributeName: Id
+        KeyType: RANGE
+    AttributeDefinitions:
+      - AttributeName: prolificId
+        AttributeType: S
+      - AttributeName: Id
+        AttributeType: S
+    BillingMode: PROVISIONED
+    ProvisionedThroughput:
+      ReadCapacityUnits: 5
+      WriteCapacityUnits: 5
 
   FocusModeAdminTable:
     Type: AWS::Serverless::SimpleTable
