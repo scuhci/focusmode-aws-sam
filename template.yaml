@@ -36,7 +36,7 @@ Globals:
     Cors:
       AllowOrigin: '''*'''
       AllowHeaders: '''Content-Type'''
-      AllowMethods: '''GET'''
+      AllowMethods: "'GET,POST,OPTIONS'"
 
 Resources:
   FocusModeApiGateway:
@@ -47,7 +47,7 @@ Resources:
       Cors:
         AllowOrigin: '''*'''
         AllowHeaders: '''Content-Type'''
-        AllowMethods: '''GET'''
+        AllowMethods: "'GET,POST,OPTIONS'"
 
   UtilsLayer:
     Type: AWS::Serverless::LayerVersion
