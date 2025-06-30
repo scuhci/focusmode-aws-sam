@@ -25,7 +25,7 @@ POST_STAGE_SURVEY_DATA_TABLE_NAME = "focusmode-FocusModePostStageSurveyResponseT
 CORS_HEADERS = {
     "Access-Control-Allow-Headers" : "Content-Type",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET"
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
 }
 
 YOUTUBE_API_KEY = os.environ["YouTubeApiKey"]
