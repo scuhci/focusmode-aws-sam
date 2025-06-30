@@ -37,8 +37,6 @@ def lambda_handler(event, context):
     missing_id_message = check_id(id)
     if missing_id_message:
         return missing_id_message
-    dynamodb = boto3.resource("dynamodb")
-    user_table = dynamodb.Table(USER_TABLE_NAME)
 
     # update the last active timestamp for user
     update_last_active_time(id)
