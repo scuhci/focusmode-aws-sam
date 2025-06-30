@@ -8,12 +8,27 @@
 # possible value types: string, int, float, bool
 # note: a type can end in ? signaling that the value is optional
 
+# data_types:
+#   Query:
+#     Query: string
+#     Current_FocusMode: bool
+#     Algorithm_FocusMode: bool?
+#   Session:
+#     Start_Time: string
+#     End_Time: string
+#     FocusMode_Time_Sum: int
+
 data_types:
-  Query:
-    Query: string
-    Current_FocusMode: bool
-    Algorithm_FocusMode: bool?
-  Session:
-    Start_Time: string
-    End_Time: string
-    FocusMode_Time_Sum: int
+  daily_survey:
+    prolificId: string
+    timestamp: string
+    stage: int
+    type: string
+    distraction: int
+    enjoyment: int
+    userAgency: int
+  post_stage_survey:
+    prolificId: string
+    timestamp: string
+    stage: int
+    type: string

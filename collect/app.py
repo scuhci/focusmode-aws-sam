@@ -1,7 +1,9 @@
 import json
-import yaml
-import boto3
-from focus_utils import CORS_HEADERS, DATA_TABLE_NAME, check_query_parameters, check_id, get_current_datetime_str, update_last_active_time, update_user_stage
+import yaml # type: ignore
+import boto3 # type: ignore
+import time
+import random
+from focus_utils import CORS_HEADERS, DAILY_SURVEY_DATA_TABLE_NAME, POST_STAGE_SURVEY_DATA_TABLE_NAME, check_query_parameters, check_id, get_current_datetime_str, update_last_active_time, update_user_stage, decimal_to_int
 
 def lambda_handler(event, context):
     """Used to collect data for the FocusMode Study
@@ -25,14 +27,42 @@ def lambda_handler(event, context):
         Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
     """
 
-    # check to see if query parameters have been sent
-    missing_parameters_message = check_query_parameters(event["queryStringParameters"], ["id", "type"])
-    if missing_parameters_message:
-        return missing_parameters_message
-    
+    try:
+        requested_body: dict = json.loads(event["body"])
+    except (ValueError, TypeError) as e:
+        return {
+            "statusCode": 400,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({
+                "message": f"Invalid POST body. Must be JSON"
+            }),
+        }
+
+    # check to make sure a body was sent
+    if not requested_body:
+        return {
+            "statusCode": 400,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({
+                "message": f"POST body is missing"
+            }),
+        }
+
     # get query parameters and body
-    id: str = event["queryStringParameters"]["id"]
-    data_type: str = event["queryStringParameters"]["type"]
+    id: str = requested_body.get("prolificId")
+    data_type: str = requested_body.get("type")
+
+    # check to see if the Prolific ID is valid
+    missing_id_message = check_id(id)
+    if missing_id_message:
+        return missing_id_message
+
+    if not data_type:
+        return {
+            "statusCode": 400,
+            "headers": CORS_HEADERS,
+            "body": json.dumps({"message": "Missing type in request body"})
+        }
 
     # update the last active timestamp for user
     update_last_active_time(id)
@@ -44,32 +74,6 @@ def lambda_handler(event, context):
     # Now you can safely access "data"
     data = parsed_body["data"]
     message = parsed_body["message"]
-
-    try:
-        requested_body: dict = json.loads(event["body"])
-    except (ValueError, TypeError) as e:
-        return {
-            "statusCode": 400,
-            "headers": CORS_HEADERS,
-            "body": json.dumps({
-                "message": f"Invalid POST body. Must be JSON"
-            }),
-        }
-    
-    # check to see if the Prolific ID is valid
-    missing_id_message = check_id(id)
-    if missing_id_message:
-        return missing_id_message
-    
-    # check to make sure a body was sent
-    if not requested_body:
-        return {
-            "statusCode": 400,
-            "headers": CORS_HEADERS,
-            "body": json.dumps({
-                "message": f"POST body is missing"
-            }),
-        }
     
     # check to see if the data type and respective values posted are valid
     with open('data_types.yaml') as stream:
@@ -132,32 +136,31 @@ def lambda_handler(event, context):
                         }),
                     }
 
-            # check if there is an extra key in the body
-            extra_values = set(requested_body.keys()) - set(valid_data_types[data_type].keys())
-            if len(extra_values) != 0:
-                return {
-                    "statusCode": 400,
-                    "headers": CORS_HEADERS,
-                    "body": json.dumps({
-                        "message": f"Invalid value(s): {", ".join(extra_values)}"
-                    }),
-                }
+            # # check if there is an extra key in the body
+            # extra_values = set(requested_body.keys()) - set(valid_data_types[data_type].keys())
+            # if len(extra_values) != 0:
+            #     return {
+            #         "statusCode": 400,
+            #         "headers": CORS_HEADERS,
+            #         "body": json.dumps({
+            #             "message": f"Invalid value(s): {", ".join(extra_values)}"
+            #         }),
+            #     }
 
             # the requested body passed all the checks and is valid!
             dynamodb = boto3.resource("dynamodb")
-            data_table = dynamodb.Table(DATA_TABLE_NAME)
+            daily_survey_data_table = dynamodb.Table(DAILY_SURVEY_DATA_TABLE_NAME)
+            post_stage_survey_data_table = dynamodb.Table(POST_STAGE_SURVEY_DATA_TABLE_NAME)
 
-            current_time = get_current_datetime_str()
-
-            data_table.put_item(
-                Item={
-                        "Id": f"{data_type}#{current_time}", # format: Value_Type#Timestamp
-                        "User_Id": "123", # TODO: change to be the prolific id
-                        "Timestamp": current_time,
-                        "Current_Stage": "", # TODO: get current_stage from user table
-                        "Value_Type": data_type,
-                        "Value": requested_body
-                    }
+            
+            requested_body["Id"] = f"{int(time.time() * 1000)}-{random.randint(1000, 9999)}"
+            if data_type == "daily_survey":
+                daily_survey_data_table.put_item(
+                    Item=requested_body
+                )
+            elif data_type == "post_stage_survey":
+                post_stage_survey_data_table.put_item(
+                    Item=requested_body
                 )
 
             return {
@@ -166,8 +169,8 @@ def lambda_handler(event, context):
                 "body": json.dumps({
                     "stage_status": data, # Sending stage status into response
                     "stage_status_message": message,
-                    "message": "Runs!"
-            }),
+                    "message": "Survey response saved successfully!"
+                }, default=decimal_to_int),
             }
                     
     # no keys matched

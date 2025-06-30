@@ -17,7 +17,7 @@ Parameters:
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 10
 
     # You can add LoggingConfig parameters such as the Logformat, Log Group, and SystemLogLevel or ApplicationLogLevel. Learn more here https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-loggingconfig.
     LoggingConfig:
@@ -64,7 +64,7 @@ Resources:
       CodeUri: categorize/
       Handler: app.lambda_handler
       Runtime: python3.12
-      Timeout: 30
+      Timeout: 60
       Architectures:
         - x86_64
       Layers:
@@ -85,6 +85,8 @@ Resources:
             TableName: !Ref FocusModeDailySurveyResponseTable
         - DynamoDBWritePolicy:
             TableName: !Ref FocusModePostStageSurveyResponseTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeUserPreferenceDataTable
         - DynamoDBWritePolicy:
             TableName: !Ref FocusModeUserPreferenceDataTable
         - DynamoDBReadPolicy:
@@ -96,6 +98,7 @@ Resources:
       CodeUri: collect/
       Handler: app.lambda_handler
       Runtime: python3.12
+      Timeout: 30
       Architectures:
         - x86_64
       Layers:

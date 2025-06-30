@@ -5,7 +5,7 @@ from focus_utils import CORS_HEADERS, USER_TABLE_NAME, check_query_parameters, c
 
 
 def lambda_handler(event, context):
-    """Returns the categorization of a YouTube search query into 'focus' or 'regular' with an explanation 
+    """Onboard a user into the FocusMode study and return the User info
 
     Parameters
     ----------
@@ -68,7 +68,7 @@ def lambda_handler(event, context):
             "is_study_completed": False
         }
         return {
-            "statusCode": 400,
+            "statusCode": 208,
             "headers": CORS_HEADERS,
             "body": json.dumps({
                 "data": data, 

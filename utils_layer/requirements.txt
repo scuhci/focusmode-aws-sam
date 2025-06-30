@@ -1,1 +1,4 @@
 boto3==1.36.12
+numpy==1.26.4
+pandas==2.2.2
+google-api-python-client==2.173.0
