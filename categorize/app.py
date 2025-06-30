@@ -48,9 +48,9 @@ def lambda_handler(event, context):
     new_entry = req_body.get("newPreferenceData")
     
     # check to see if the Prolific ID is valid
-    missing_id_message = check_id(id)
-    if missing_id_message:
-        return missing_id_message
+    # missing_id_message = check_id(id)
+    # if missing_id_message:
+    #     return missing_id_message
 
     # get env variables
     OPENAI_KEY = os.environ["OpenAIKey"]

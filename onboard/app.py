@@ -35,10 +35,10 @@ def lambda_handler(event, context):
     id: str = event["queryStringParameters"]["id"]
     focusmode_categories: list[str] = event["queryStringParameters"]["focusmode_categories"].split(";")
     
-    # check to see if the Prolific ID is valid
-    missing_id_message = check_id(id)
-    if missing_id_message:
-        return missing_id_message
+    # # check to see if the Prolific ID is valid
+    # missing_id_message = check_id(id)
+    # if missing_id_message:
+    #     return missing_id_message
     
     # check to see if the participant has onboarded before
     dynamodb = boto3.resource("dynamodb")
