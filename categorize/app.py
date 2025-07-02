@@ -1,7 +1,9 @@
 import os
 import json
 import requests # type: ignore
-from focus_utils import CORS_HEADERS, USER_PREFERENCE_DATA_TABLE_NAME, check_query_parameters, check_id, update_last_active_time, update_user_stage, fetch_youtube_data, decimal_to_int, preprocess_video_json_entry, fetch_and_insert_user_entry
+import random
+import time
+from focus_utils import CORS_HEADERS, update_last_active_time, update_user_stage, fetch_youtube_data, decimal_to_int, preprocess_video_json_entry, fetch_and_insert_user_entry, update_user_with_focus_status, user_table
 
 
 def lambda_handler(event, context):
@@ -46,16 +48,10 @@ def lambda_handler(event, context):
     id: str = req_body.get("prolificId")
     query: str = req_body["query"]
     new_entry = req_body.get("newPreferenceData")
-    
-    # check to see if the Prolific ID is valid
-    # missing_id_message = check_id(id)
-    # if missing_id_message:
-    #     return missing_id_message
 
     # get env variables
     OPENAI_KEY = os.environ["OpenAIKey"]
     
-
     # update the last active timestamp for user
     update_last_active_time(id)
 
@@ -67,7 +63,10 @@ def lambda_handler(event, context):
     data = parsed_body["data"]
     message = parsed_body["message"]
 
-
+    # Fetch the user details fom user table
+    user_data = user_table.get_item(Key={"User_Id": id})
+    user_data = user_data["Item"]
+    user_focus_categories = user_data["FocusMode_Categories"]
 
     # Fetch the YouTube video data and append into request
     video_id = new_entry.get("youTubeID")
@@ -80,11 +79,13 @@ def lambda_handler(event, context):
         } 
         new_entry["youTubeApiData"] = youtube_data
     
-    _, new_entry = fetch_and_insert_user_entry(id, new_entry)
+    entry_id = f"{int(time.time() * 1000)}-{random.randint(1000, 9999)}"
+    _, new_entry = fetch_and_insert_user_entry(id, new_entry, entry_id)
 
     print("JSON to be parsed")
     print(req_body)
     prompt_data = preprocess_video_json_entry(req_body)
+    prompt_data["focus_categories"] = user_focus_categories
 
     print("Parsed data")
     print(prompt_data)
@@ -125,15 +126,16 @@ def lambda_handler(event, context):
         response = requests.post(url, headers=headers, json=body, timeout=30)
 
         if response.status_code == 200:
-            # TODO : Update current user with predicted focus status
             json_response = response.json()
-
             result = json.loads(json_response['choices'][0]['message']['content'])
+
+            # TODO : Extract the focus status as True/Flase and update the user with it.
+            focus_status = True
+            update_user_with_focus_status(entry_id, id, focus_status)
 
     except requests.RequestException as e:
         # Send some context about this error to Lambda Logs
         print(e)
-
         raise e
 
     return {
