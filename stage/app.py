@@ -32,11 +32,6 @@ def lambda_handler(event, context):
     
     # get query parameters and body
     id: str = event["queryStringParameters"]["id"]
-    
-    # # check to see if the Prolific ID is valid
-    # missing_id_message = check_id(id)
-    # if missing_id_message:
-    #     return missing_id_message
 
     # update the last active timestamp for user
     update_last_active_time(id)

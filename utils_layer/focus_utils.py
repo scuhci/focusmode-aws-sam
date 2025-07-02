@@ -3,7 +3,6 @@ import json
 import boto3 # type: ignore
 import hashlib
 import time
-import random
 import requests # type: ignore
 import pandas as pd # type: ignore
 
@@ -246,22 +245,40 @@ def check_query_parameters(event_query_string_parameters: list[str], required_pa
     return None
 
 def check_id(prolific_id: str) -> bool:
-    prolific_ids = admin_table.get_item(Key={"id": "prolific_ids"})
-
-    if prolific_id in prolific_ids['Item']['data']:
+    # Retrieve the item from DynamoDB table
+    response = user_table.get_item(Key={"User_Id": prolific_id})
+    response = response.get('Item')
+    
+    if response:
+        # If a record with this User_Id exists, return None (meaning OK)
         return None
     else:
+        # If no record exists, return a 401 Unauthorized response
         return {
             "statusCode": 401,
             "headers": CORS_HEADERS,
             "body": json.dumps({
-                "message": f"Unauthorized"
+                "message": "Unauthorized"
             }),
         }
 
 
-def fetch_and_insert_user_entry(prolificId, newEntry):
-    entry_id = f"{int(time.time() * 1000)}-{random.randint(1000, 9999)}"
+def update_user_with_focus_status(id, prolific_id, focus):
+    response = user_pref_data_table.update_item(
+        Key={
+            "prolificId": prolific_id,
+            "Id" : id},
+        UpdateExpression="SET focus = :focus_status ",
+        ExpressionAttributeValues={":focus_status": focus},
+        ReturnValues="ALL_NEW"
+    )
+
+    databaseAttributes = response["Attributes"]
+    return databaseAttributes
+
+
+def fetch_and_insert_user_entry(prolificId, newEntry, entry_id):
+    
     # Step 1: Query existing entries for the same prolificId and sessionId
     response = user_pref_data_table.query(
         KeyConditionExpression=Key('prolificId').eq(prolificId),
