@@ -30,6 +30,7 @@ Globals:
         DataTableName: !Ref FocusModeDataCollectionTable
         DailySurveyDataTableName: !Ref FocusModeDailySurveyResponseTable
         PostStageSurveyDataTableName: !Ref FocusModePostStageSurveyResponseTable
+        PostStudySurveyDataTableName: !Ref FocusModePostStudySurveyResponseTable
         UserPreferenceDataTableName: !Ref FocusModeUserPreferenceDataTable
         AdminTableName: !Ref FocusModeAdminTable
   Api:
@@ -119,6 +120,8 @@ Resources:
             TableName: !Ref FocusModeDailySurveyResponseTable
         - DynamoDBWritePolicy:
             TableName: !Ref FocusModePostStageSurveyResponseTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModePostStudySurveyResponseTable
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeAdminTable
 
@@ -222,6 +225,24 @@ Resources:
         WriteCapacityUnits: 5
 
   FocusModePostStageSurveyResponseTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: prolificId
+          KeyType: HASH
+        - AttributeName: Id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: prolificId
+          AttributeType: S
+        - AttributeName: Id
+          AttributeType: S
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  FocusModePostStudySurveyResponseTable:
     Type: AWS::DynamoDB::Table
     Properties:
       KeySchema:
