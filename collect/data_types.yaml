@@ -32,3 +32,8 @@ data_types:
     timestamp: string
     stage: int
     type: string
+  post_study_survey:
+    prolificId: string
+    timestamp: string
+    stage: int
+    type: string

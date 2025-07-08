@@ -1,7 +1,7 @@
 import json
 import random
 import boto3
-from focus_utils import CORS_HEADERS, USER_TABLE_NAME, check_query_parameters, check_id, get_current_datetime_str, update_last_active_time, generate_weekly_stage_start_times, generate_verification_code
+from focus_utils import CORS_HEADERS, USER_TABLE_NAME, check_query_parameters, get_current_datetime_str, update_last_active_time, generate_weekly_stage_start_times, generate_verification_code
 
 
 def lambda_handler(event, context):

@@ -1,6 +1,6 @@
 import json
 import boto3
-from focus_utils import CORS_HEADERS, USER_TABLE_NAME, check_query_parameters, check_id, get_datetime_obj, update_last_active_time, update_user_stage
+from focus_utils import CORS_HEADERS, check_query_parameters, update_last_active_time, update_user_stage
 
 
 def lambda_handler(event, context):

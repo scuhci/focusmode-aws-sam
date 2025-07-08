@@ -34,6 +34,7 @@ def lambda_handler(event, context):
     except:
         return{
             "statauCode": 400,
+            "headers": CORS_HEADERS,
             "body": json.dumps({"error": "Invalid JSON in request body"})
         }
     
@@ -41,6 +42,7 @@ def lambda_handler(event, context):
     if "prolificId" not in req_body or "newPreferenceData" not in req_body:
         return {
             "statusCode": 400,
+            "headers": CORS_HEADERS,
             "body": json.dumps({"error": "Missing 'prolificId' or 'newPreferenceData' in request body"})
         }
 
@@ -75,6 +77,7 @@ def lambda_handler(event, context):
         if youtube_data is None:
             return {
             "statusCode": 500,
+            "headers": CORS_HEADERS,
             "body": json.dumps({"error": f"Enable to featch the youtube data for youtube video id : {video_id}"}, default=decimal_to_int)
         } 
         new_entry["youTubeApiData"] = youtube_data
