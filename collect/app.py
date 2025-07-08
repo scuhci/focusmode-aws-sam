@@ -3,7 +3,7 @@ import yaml # type: ignore
 import boto3 # type: ignore
 import time
 import random
-from focus_utils import CORS_HEADERS, DAILY_SURVEY_DATA_TABLE_NAME, POST_STAGE_SURVEY_DATA_TABLE_NAME, check_query_parameters, check_id, get_current_datetime_str, update_last_active_time, update_user_stage, decimal_to_int
+from focus_utils import CORS_HEADERS, DAILY_SURVEY_DATA_TABLE_NAME, POST_STAGE_SURVEY_DATA_TABLE_NAME, POST_STUDY_SURVEY_DATA_TABLE_NAME, update_last_active_time, update_user_stage, decimal_to_int
 
 def lambda_handler(event, context):
     """Used to collect data for the FocusMode Study
@@ -151,7 +151,7 @@ def lambda_handler(event, context):
             dynamodb = boto3.resource("dynamodb")
             daily_survey_data_table = dynamodb.Table(DAILY_SURVEY_DATA_TABLE_NAME)
             post_stage_survey_data_table = dynamodb.Table(POST_STAGE_SURVEY_DATA_TABLE_NAME)
-
+            post_study_survey_data_table = dynamodb.Table(POST_STUDY_SURVEY_DATA_TABLE_NAME)
             
             requested_body["Id"] = f"{int(time.time() * 1000)}-{random.randint(1000, 9999)}"
             if data_type == "daily_survey":
@@ -162,7 +162,11 @@ def lambda_handler(event, context):
                 post_stage_survey_data_table.put_item(
                     Item=requested_body
                 )
-
+            elif data_type == "post_study_survey":
+                post_study_survey_data_table.put_item(
+                    Item=requested_body
+                )
+                
             return {
                 "statusCode": 200,
                 "headers": CORS_HEADERS,

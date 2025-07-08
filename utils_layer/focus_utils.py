@@ -20,6 +20,7 @@ ADMIN_TABLE_NAME = "focusmode-FocusModeAdminTable-1L8IZJNFRPT8F"            #os.
 USER_PREFERENCE_DATA_TABLE_NAME = "focusmode-FocusModeUserPreferenceDataTable-1GDK11Q0RIAAO" #os.environ.get("UserPreferenceDataTableName") 
 DAILY_SURVEY_DATA_TABLE_NAME = "focusmode-FocusModeDailySurveyResponseTable-NESGY2X0XTDN" #os.environ.get("DailySurveyDataTableName")
 POST_STAGE_SURVEY_DATA_TABLE_NAME = "focusmode-FocusModePostStageSurveyResponseTable-1I0Z60LUCHJ13" #os.environ.get("PostStageSurveyDataTableName")
+POST_STUDY_SURVEY_DATA_TABLE_NAME = "focusmode-FocusModePostStudySurveyResponseTable-DV2UIJHGAI1U"
 
 CORS_HEADERS = {
     "Access-Control-Allow-Headers" : "Content-Type",
@@ -483,27 +484,27 @@ def extract_features(df: pd.DataFrame, category_id_to_name: dict) -> pd.DataFram
     def extract_features(row):
         try:
             # Time features
-            timestamp = pd.to_datetime(row.get('timestamp', pd.Timestamp.now()))
-            row['watch_hour'] = timestamp.hour
-            row['watch_weekday'] = timestamp.weekday()
-            row['is_night'] = (timestamp.hour < 6) or (timestamp.hour > 22)
-            row['is_weekend'] = timestamp.weekday() in [5, 6]
-            row['watch_time_of_day'] = get_time_of_day(timestamp.hour)
+            # timestamp = pd.to_datetime(row.get('timestamp', pd.Timestamp.now()))
+            #row['watch_hour'] = timestamp.hour
+            # row['watch_weekday'] = timestamp.weekday()
+            # row['is_night'] = (timestamp.hour < 6) or (timestamp.hour > 22)
+            # row['is_weekend'] = timestamp.weekday() in [5, 6]
+            # row['watch_time_of_day'] = get_time_of_day(timestamp.hour)
 
-            # YouTube features
-            published_at = pd.to_datetime(row.get('youTubeApiData.snippet.publishedAt', pd.Timestamp.now()))
-            row['published_hour'] = published_at.hour
-            row['published_weekday'] = published_at.weekday()
+            # # YouTube features
+            # published_at = pd.to_datetime(row.get('youTubeApiData.snippet.publishedAt', pd.Timestamp.now()))
+            # row['published_hour'] = published_at.hour
+            # row['published_weekday'] = published_at.weekday()
 
             row['title_length'] = len(str(row.get('youTubeApiData.snippet.localized.title', '')).split())
             row['desc_length'] = len(str(row.get('youTubeApiData.snippet.localized.description', '')).split())
 
-            row['viewCount'] = pd.to_numeric(row.get('youTubeApiData.statistics.viewCount', 0), errors='coerce')
-            row['favoriteCount'] = pd.to_numeric(row.get('youTubeApiData.statistics.favoriteCount', 0), errors='coerce')
-            row['commentCount'] = pd.to_numeric(row.get('youTubeApiData.statistics.commentCount', 0), errors='coerce')
+            # row['viewCount'] = pd.to_numeric(row.get('youTubeApiData.statistics.viewCount', 0), errors='coerce')
+            # row['favoriteCount'] = pd.to_numeric(row.get('youTubeApiData.statistics.favoriteCount', 0), errors='coerce')
+            # row['commentCount'] = pd.to_numeric(row.get('youTubeApiData.statistics.commentCount', 0), errors='coerce')
 
-            row['engagement_rate'] = (row['favoriteCount'] + row['commentCount']) / (row['viewCount'] + 1)
-            row['is_popular'] = row['viewCount'] > 500000
+            # row['engagement_rate'] = (row['favoriteCount'] + row['commentCount']) / (row['viewCount'] + 1)
+            # row['is_popular'] = row['viewCount'] > 500000
 
             # Video category
             cat_id = str(row.get('youTubeApiData.snippet.categoryId', ''))
