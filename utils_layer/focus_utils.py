@@ -21,6 +21,7 @@ USER_PREFERENCE_DATA_TABLE_NAME = "focusmode-FocusModeUserPreferenceDataTable-1G
 DAILY_SURVEY_DATA_TABLE_NAME = "focusmode-FocusModeDailySurveyResponseTable-NESGY2X0XTDN" #os.environ.get("DailySurveyDataTableName")
 POST_STAGE_SURVEY_DATA_TABLE_NAME = "focusmode-FocusModePostStageSurveyResponseTable-1I0Z60LUCHJ13" #os.environ.get("PostStageSurveyDataTableName")
 POST_STUDY_SURVEY_DATA_TABLE_NAME = "focusmode-FocusModePostStudySurveyResponseTable-DV2UIJHGAI1U"
+VIDEO_RECORD_LOG_TABLE_NAME = os.environ.get("VideoRecordLogTableName")
 
 CORS_HEADERS = {
     "Access-Control-Allow-Headers" : "Content-Type",
@@ -34,6 +35,8 @@ dynamodb = boto3.resource("dynamodb")
 admin_table = dynamodb.Table(ADMIN_TABLE_NAME)
 user_table = dynamodb.Table(USER_TABLE_NAME)
 user_pref_data_table = dynamodb.Table(USER_PREFERENCE_DATA_TABLE_NAME)
+video_record_log_table = dynamodb.Table(VIDEO_RECORD_LOG_TABLE_NAME)
+
 
 
 def update_last_active_time(user_id : str):

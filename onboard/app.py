@@ -77,6 +77,13 @@ def lambda_handler(event, context):
         random.shuffle(stage_order)
         current_timestamp = get_current_datetime_str()
         verification_code = generate_verification_code(id)
+
+        stage_watch_time = {
+            "1" : 0,
+            "2" : 0,
+            "3" : 0, 
+            "4" : 0
+        }
         # add participant to the user database
         user_table.put_item(
             Item={
@@ -87,7 +94,8 @@ def lambda_handler(event, context):
                     "Stage_Start_Times" : generate_weekly_stage_start_times(current_timestamp, stage_order),
                     "User_Completed_Stages": [],
                     "Current_Stage": stage_order[0],
-                    "FocusMode_Categories": focusmode_categories
+                    "FocusMode_Categories": focusmode_categories,
+                    "StageWatchTimes": stage_watch_time
                 }
             )
         
