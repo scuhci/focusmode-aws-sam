@@ -32,6 +32,7 @@ Globals:
         PostStageSurveyDataTableName: !Ref FocusModePostStageSurveyResponseTable
         PostStudySurveyDataTableName: !Ref FocusModePostStudySurveyResponseTable
         UserPreferenceDataTableName: !Ref FocusModeUserPreferenceDataTable
+        VideoRecordLogTableName: !Ref FocusModeVideoRecordLogTable
         AdminTableName: !Ref FocusModeAdminTable
   Api:
     Cors:
@@ -59,6 +60,60 @@ Resources:
     Metadata:
       BuildMethod: python3.12
 
+  VideoRecordLogFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: videoRecordLog/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Timeout: 5
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        CategorizeApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FocusModeApiGateway
+            Path: /videoRecordLog
+            Method: ANY
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeUserTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeVideoRecordLogTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeVideoRecordLogTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeAdminTable
+
+
+  UpdateWatchTimeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: updateWatchTime/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Timeout: 5
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref UtilsLayer
+      Events:
+        CategorizeApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FocusModeApiGateway
+            Path: /updateWatchTime
+            Method: ANY
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeUserTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeUserTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeAdminTable
   CategorizeFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -278,6 +333,25 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
 
+
+  FocusModeVideoRecordLogTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: prolificId
+          KeyType: HASH
+        - AttributeName: Id
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: prolificId
+          AttributeType: S
+        - AttributeName: Id
+          AttributeType: S
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+        
   FocusModeAdminTable:
     Type: AWS::Serverless::SimpleTable
 
