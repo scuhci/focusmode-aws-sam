@@ -39,6 +39,175 @@ video_record_log_table = dynamodb.Table(VIDEO_RECORD_LOG_TABLE_NAME)
 
 
 
+
+FEW_SHOT_EXAMPLES = """
+### Few-Shot Focus-Mode Examples
+
+Example 1
+Title: "Lil Yachty – Lunch Break Freestyle"
+Description: "Lyrical Lemonade Presents: Lil Yachty… (song produced by…)"
+Current category: 10
+History: [(cat=10, focus=TRUE), (cat=, focus=TRUE), (cat=, focus=FALSE)]
+Subscribed: False
+Intent source: "/watch"
+→ **True**
+Reason: user just watched category 10 with focus ON and is repeating the same category with focus from last session—a **strong signal** to stay in Focus Mode.
+
+Example 2
+Title: "Beginner Python Tutorial"
+Description: "Learn Python basics, variables, loops, and functions…"
+Current category: 27
+History: [(cat=24, focus=FALSE), (cat=27, focus=FALSE), (cat=, focus=FALSE)]
+Subscribed: True
+Intent source: "/search"
+→ **True**
+Reason: Python tutorial (Education/How-to) matches user’s learning intent and user is subscribed; soft signals enough to enable.
+
+Example 3
+Title: "Top 10 Funny Cat Clips"
+Description: "Watch these hilarious cat fails and meows…"
+Current category: 15
+History: [(cat=15, focus=FALSE), (cat=15, focus=FALSE), (cat=, focus=FALSE)]
+Subscribed: False
+Intent source: "/home"
+→ **False**
+Reason: although category repeats, no prior focus, no subscription, and intent source is weak—so Focus Mode stays off.
+
+Example 4
+Title: "Advanced Calculus Lecture"
+Description: "This lecture covers multivariable derivatives and integrals…"
+Current category: 27
+History: [(cat=27, focus=TRUE), (cat=27, focus=TRUE), (cat=, focus=FALSE)]
+Subscribed: False
+Intent source: "/channelPage"
+→ **True**
+Reason: repeated focused lectures in category 27 twice—strongest signal to keep Focus Mode on.
+
+Example 5
+Title: "Marvel’s New Trailer Breakdown"
+Description: "We analyze the latest Marvel trailer scene by scene…"
+Current category: 1
+History: [(cat=1, focus=FALSE), (cat=2, focus=TRUE), (cat=, focus=FALSE)]
+Subscribed: True
+Intent source: "/search"
+→ **True**
+Reason: user subscribed, intent is search, category is film/animation—a soft signal stack passes threshold.
+
+Example 6
+Title: "5-Minute Home Workout"
+Description: "Quick HIIT routine to get your heart racing…"
+Current category: 17
+History: [(cat=17, focus=FALSE), (cat=17, focus=FALSE), (cat=17, focus=FALSE)]
+Subscribed: False
+Intent source: "/home"
+→ **False**
+Reason: no prior focus, description short, no learning keywords—Focus Mode stays off.
+
+Example 7
+Title: "Quantum Physics Explained"
+Description: "A deep dive into quantum entanglement and superposition…"
+Current category: 27
+History: [(cat=, focus=FALSE), (cat=, focus=FALSE), (cat=, focus=FALSE)]
+Subscribed: False
+Intent source: "/search"
+→ **True**
+Reason: strong learning intent keyword “explained,” intent is search, category is Science/Education.
+
+Example 8
+Title: "Daily Vlog: A Day in My Life"
+Description: "Come spend a day doing chores, cooking, and errands…"
+Current category: 22
+History: [(cat=22, focus=FALSE), (cat=22, focus=FALSE), (cat=22, focus=FALSE)]
+Subscribed: False
+Intent source: "/home"
+→ **False**
+Reason: lifestyle vlog, no learning intent, no prior focus—Focus Mode off.
+
+Example 9
+Title: "Guitar Tutorial for Beginners"
+Description: "Learn three basic chords on acoustic guitar…"
+Current category: 27
+History: [(cat=, focus=FALSE), (cat=, focus=FALSE), (cat=, focus=FALSE)]
+Subscribed: True
+Intent source: "/channel"
+→ **True**
+Reason: tutorial keyword, category in education, user subscribed, intent strong—enable.
+
+Example 10
+Title: "Epic Car Drift Compilation"
+Description: "The wildest drift runs from pro drivers…"
+Current category: 2
+History: [(cat=2, focus=TRUE), (cat=3, focus=FALSE), (cat=, focus=FALSE)]
+Subscribed: False
+Intent source: "/home"
+→ **True**
+Reason: prior focus ON in same car/auto category—strongest single rule.
+
+### Now classify this new session:
+"""
+
+def build_prompt(row):
+    # [your existing extraction logic…]
+    prev_focuses = [str(row.get(f"focusMode_{i+1}", "")).lower()=="true" for i in range(3)]
+    prev_cats      = [str(row.get(f"categoryId_{i+1}", "")) for i in range(3)]
+    focus_cats = str(row["focus_categories"])
+    title          = str(row.get("title","")).replace("\n"," ")
+    desc           = str(row.get("description","")).replace("\n"," ")
+    current_cat    = str(row.get("video_category",""))
+    desc_wc        = len(desc.split())
+    is_sub         = str(row.get("isSubscribed",False)).lower()=="true"
+    intent_source  = str(row.get("curr_intent_source","")).lower()
+    focus_keys     = ["study","tutorial","lecture","focus","class","learn","course"]
+    key_hits       = [kw for kw in focus_keys if kw in title.lower() or kw in desc.lower()]
+    cat_focus_map  = "\n".join(
+        f"{i+1}. categoryId_{i+1}={prev_cats[i]} → focusMode_{i+1}={prev_focuses[i]}"
+        for i in range(3)
+    )
+
+    # your original template, but **without** the few-shot block
+    main_prompt = f"""
+You are a YouTube Focus Mode decision assistant.
+
+Your goal is to evaluate whether **Focus Mode** should be enabled for the current session. Focus Mode should be enabled if any **strong signals** suggest the user is watching with intentional focus.
+
+Evaluate the following:
+
+### Current Video Info:
+- Title: "{title}"
+- Description: "{desc[:140]}..."
+- Current categoryId: {current_cat}
+
+### User Focus Context:
+- User-selected focus categories: {', '.join(sorted(focus_cats)) or "None"}
+
+### Past Sessions:
+{cat_focus_map}
+
+### Evaluation Rules
+1. Any previous focusMode is True.
+2. If any previous categoryId==current and that session had focusMode=True.
+3. Current category is in focus-supporting list.
+4. Any previous category matches current.
+5. A previous focusMode=True AND category matched current.
+6. Current category appears ≥2× in history.
+7. User is subscribed → {is_sub}
+8. Intent source contains Search/Channel → {intent_source}
+9. Title/description contains focus keywords → {', '.join(key_hits) or "None"}
+10. Description >50 words AND has focus keywords → {desc_wc>50 and len(key_hits)>0}
+
+You MUST evaluate ALL 10 rules.  Return JSON only:
+```json
+{{
+  "category":"true" or "false",
+  "rule":[…],
+  "explanation":"A detailed explanation of your reasoning.",
+  "explanation_summary": "A VERY SHORT, plain-language summary of no more than 20 words. Do NOT repeat the explanation. Do NOT add extra details or confidence scores.",
+  "confidence":"0-100%"
+}}
+```"""
+    return FEW_SHOT_EXAMPLES + main_prompt
+
+
 def update_last_active_time(user_id : str):
 
     missing_id_message = check_id(user_id)
@@ -475,7 +644,7 @@ def expand_intent_node(df):
     intent_df = intent_parsed.apply(pd.Series)
 
     # Add prefix to avoid column name clashes
-    intent_df.columns = [f"intent_{col}" for col in intent_df.columns]
+    intent_df.columns = [f"{col}" for col in intent_df.columns]
 
     # Combine with original DataFrame
     df = pd.concat([df.drop(columns=['intentNode']), intent_df], axis=1)
@@ -486,29 +655,6 @@ def expand_intent_node(df):
 def extract_features(df: pd.DataFrame, category_id_to_name: dict) -> pd.DataFrame:
     def extract_features(row):
         try:
-            # Time features
-            # timestamp = pd.to_datetime(row.get('timestamp', pd.Timestamp.now()))
-            #row['watch_hour'] = timestamp.hour
-            # row['watch_weekday'] = timestamp.weekday()
-            # row['is_night'] = (timestamp.hour < 6) or (timestamp.hour > 22)
-            # row['is_weekend'] = timestamp.weekday() in [5, 6]
-            # row['watch_time_of_day'] = get_time_of_day(timestamp.hour)
-
-            # # YouTube features
-            # published_at = pd.to_datetime(row.get('youTubeApiData.snippet.publishedAt', pd.Timestamp.now()))
-            # row['published_hour'] = published_at.hour
-            # row['published_weekday'] = published_at.weekday()
-
-            row['title_length'] = len(str(row.get('youTubeApiData.snippet.localized.title', '')).split())
-            row['desc_length'] = len(str(row.get('youTubeApiData.snippet.localized.description', '')).split())
-
-            # row['viewCount'] = pd.to_numeric(row.get('youTubeApiData.statistics.viewCount', 0), errors='coerce')
-            # row['favoriteCount'] = pd.to_numeric(row.get('youTubeApiData.statistics.favoriteCount', 0), errors='coerce')
-            # row['commentCount'] = pd.to_numeric(row.get('youTubeApiData.statistics.commentCount', 0), errors='coerce')
-
-            # row['engagement_rate'] = (row['favoriteCount'] + row['commentCount']) / (row['viewCount'] + 1)
-            # row['is_popular'] = row['viewCount'] > 500000
-
             # Video category
             cat_id = str(row.get('youTubeApiData.snippet.categoryId', ''))
             cat_id_1 = str(row.get('categoryId_1', ''))
