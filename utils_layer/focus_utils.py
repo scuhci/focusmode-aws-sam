@@ -727,6 +727,23 @@ def rename_columns_to_last_segment(df):
     }
     return df.rename(columns=new_columns)
 
+def update_intent_data(df):
+    """
+    For rows where:
+    - curr_intent_source != '/SearchPage', set curr_intent_data to title
+    - curr_intent_source == '/ChannelPage', set curr_intent_data to channelTitle
+    """
+    # If it's ChannelPage, override first
+    mask_channel = df["curr_intent_source"] == "/ChannelPage"
+    if "youTubeApiData.snippet.channelTitle" in df.columns:
+        df.loc[mask_channel, "curr_intent_data"] = df.loc[mask_channel, "youTubeApiData.snippet.channelTitle"]
+
+    # If not SearchPage and not ChannelPage (so, all others), set to title
+    mask_other = (df["curr_intent_source"].notna()) & (~df["curr_intent_source"].isin(["/SearchPage", "/ChannelPage"]))
+    if "youTubeApiData.snippet.title" in df.columns:
+        df.loc[mask_other, "curr_intent_data"] = df.loc[mask_other, "youTubeApiData.snippet.title"]
+
+    return df
 
 def preprocess_video_json_entry(json_obj):
     """
@@ -747,6 +764,7 @@ def preprocess_video_json_entry(json_obj):
     # Step 2: Expand nested intentNode column
     df = expand_intent_node(df)
 
+    df = update_intent_data(df)
     # Step 3: Extract time/contextual/video-based features
     df = extract_features(df, category_id_to_name)
 
