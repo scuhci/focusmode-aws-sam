@@ -3,7 +3,7 @@ import json
 import requests # type: ignore
 import random
 import time
-from focus_utils import CORS_HEADERS, update_last_active_time, update_user_stage, fetch_youtube_data, decimal_to_int, preprocess_video_json_entry, fetch_and_insert_user_entry, update_user_with_focus_status, user_table
+from focus_utils import CORS_HEADERS, update_last_active_time, update_user_stage, fetch_youtube_data, decimal_to_int, preprocess_video_json_entry, fetch_and_insert_user_entry, update_user_with_focus_status, user_table, build_prompt
 
 
 def lambda_handler(event, context):
@@ -29,7 +29,7 @@ def lambda_handler(event, context):
     """
     # parse the request body to extract the required parameter.
     try:
-        print("RAW BODY:", event.get("body", ""))
+        #print("RAW BODY:", event.get("body", ""))
         req_body = json.loads(event.get("body", "{}"))
     except:
         return{
@@ -48,7 +48,6 @@ def lambda_handler(event, context):
 
     # Extract parameters
     id: str = req_body.get("prolificId")
-    query: str = req_body["query"]
     new_entry = req_body.get("newPreferenceData")
 
     # get env variables
@@ -85,13 +84,13 @@ def lambda_handler(event, context):
     entry_id = f"{int(time.time() * 1000)}-{random.randint(1000, 9999)}"
     _, new_entry = fetch_and_insert_user_entry(id, new_entry, entry_id)
 
-    print("JSON to be parsed")
-    print(req_body)
+    # print("JSON to be parsed")
+    # print(req_body)
     prompt_data = preprocess_video_json_entry(req_body)
     prompt_data["focus_categories"] = user_focus_categories
 
-    print("Parsed data")
-    print(prompt_data)
+    # print("Parsed data")
+    # print(prompt_data)
     
     try:
         url = 'https://api.openai.com/v1/chat/completions'
@@ -101,8 +100,8 @@ def lambda_handler(event, context):
             'Authorization': f"Bearer {OPENAI_KEY}"
         }
 
-        prompt = f"I want you to act as a YouTube query classifier. I will provide a YouTube search query and you will respond with one word, either 'focus' or 'regular'. A focus mode involves informative, specific educationally content and research, whereas a regular mode is not merely focused on gaining a skill and is more aligning with popular forms of entertainment. The search query is: {query}"
-
+        #prompt = f"I want you to act as a YouTube query classifier. I will provide a YouTube search query and you will respond with one word, either 'focus' or 'regular'. A focus mode involves informative, specific educationally content and research, whereas a regular mode is not merely focused on gaining a skill and is more aligning with popular forms of entertainment. The search query is: {query}"
+        prompt = build_prompt(prompt_data)
         body = {
             'model': 'gpt-4o-mini',
             'messages': [
@@ -116,9 +115,10 @@ def lambda_handler(event, context):
                     "type": "object",
                     "properties": {
                         "category": { "type": "string" },
-                        "explanation": { "type": "string" }
+                        "explanation": { "type": "string" },
+                        "explanation_summary": { "type": "string" }
                     },
-                    "required": ["category", "explanation"],
+                    "required": ["category", "explanation", "explanation_summary"],
                     "additionalProperties": False
                     },
                     "strict": True
@@ -126,16 +126,70 @@ def lambda_handler(event, context):
             }
         }
 
-        response = requests.post(url, headers=headers, json=body, timeout=30)
+        max_retries = 3
+        for i in range(max_retries):
+            try:
+                response = requests.post(url, headers=headers, json=body, timeout=30)
 
-        if response.status_code == 200:
-            json_response = response.json()
-            result = json.loads(json_response['choices'][0]['message']['content'])
+                if response.status_code == 200:
+                    json_response = response.json()
+                    result = json.loads(json_response['choices'][0]['message']['content'])
 
-            # TODO : Extract the focus status as True/Flase and update the user with it.
-            focus_status = True
-            update_user_with_focus_status(entry_id, id, focus_status)
+                    # ✅ Extract focus status
+                    focus_status = result.get("category")
+                    update_user_with_focus_status(entry_id, id, focus_status)
+                    break  # ✅ Success, exit loop
 
+                elif response.status_code == 429:
+                    # Rate limit
+                    wait_time = 2 ** i
+                    print(f"🔁 Rate limit hit. Waiting {wait_time}s before retry...")
+                    time.sleep(wait_time)
+                    continue
+
+                elif response.status_code == 502:
+                    # Bad Gateway
+                    wait_time = 2 ** i
+                    print(f"502 Bad Gateway. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+
+                else:
+                    # Other non-retryable errors
+                    print(f"❌ Unexpected status code {response.status_code}: {response.text}")
+                    break
+            except (requests.exceptions.ReadTimeout, requests.exceptions.Timeout) as e:
+                wait_time = 2 ** i
+                print(f"⏳ Read timeout. Retrying in {wait_time}s...")
+                time.sleep(wait_time)
+                continue
+            except Exception as e:
+                if "rate_limit" in str(e).lower():
+                    wait_time = 2 ** i
+                    print(f"🔁 Rate limit exception. Waiting {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+                print(f"❌ Exception: {str(e)}")
+                break
+        else:
+            # This runs only if no break occurred
+            update_user_with_focus_status(entry_id, id, False)
+            # For failure
+            result = {
+                "category": "false",
+                "explanation": "Max retries reached. Could not retrieve prediction from the model. Setting it too default false",
+                "explanation_summary": "Max retries reached. Could not retrieve prediction from the model. Setting it too default false"
+            }
+            return {
+                "statusCode": 200,
+                "headers": CORS_HEADERS,
+                "body": json.dumps({
+                    "stage_status": data,
+                    "stage_status_message": message,
+                    
+                    "result": result
+                }),
+            }
     except requests.RequestException as e:
         # Send some context about this error to Lambda Logs
         print(e)
@@ -148,5 +202,5 @@ def lambda_handler(event, context):
             "stage_status": data,
             "stage_status_message": message,
             "result": result
-    }),
+        }),
     }
