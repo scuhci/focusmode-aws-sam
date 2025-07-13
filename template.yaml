@@ -136,6 +136,8 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeUserTable
         - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeUserTable
+        - DynamoDBWritePolicy:
             TableName: !Ref FocusModeDataCollectionTable
         - DynamoDBWritePolicy:
             TableName: !Ref FocusModeDailySurveyResponseTable
