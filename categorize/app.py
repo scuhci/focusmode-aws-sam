@@ -135,6 +135,29 @@ def lambda_handler(event, context):
                     json_response = response.json()
                     result = json.loads(json_response['choices'][0]['message']['content'])
 
+                    summary = result.get("explanation_summary", "")
+
+                    # Split the summary into parts
+                    if "|" in summary:
+                        parts = summary.split("|")
+                        if len(parts) == 2:
+                            confidence_part = parts[0].strip()
+                            evidence_part = parts[1].strip()
+
+                            # Remove the "Key Evidence:" prefix safely
+                            if evidence_part.lower().startswith("key evidence:"):
+                                evidence_text = evidence_part[len("key evidence:"):].strip()
+
+                                # Truncate to 20 words
+                                words = evidence_text.split()
+                                if len(words) > 20:
+                                    evidence_text = " ".join(words[:20]) + "..."
+
+                                # Rebuild the summary
+                                summary = f"{confidence_part} | Key Evidence: {evidence_text}"
+
+                    result["explanation_summary"] = summary
+
                     # ✅ Extract focus status
                     focus_status = result.get("category")
                     update_user_with_focus_status(entry_id, id, focus_status)
@@ -178,7 +201,7 @@ def lambda_handler(event, context):
             result = {
                 "category": "false",
                 "explanation": "Max retries reached. Could not retrieve prediction from the model. Setting it too default false",
-                "explanation_summary": "Max retries reached. Could not retrieve prediction from the model. Setting it too default false"
+                "explanation_summary": "Confidence: 50% | Key Evidence: Max retries reached. Could not retrieve prediction from the model. Setting it too default false"
             }
             return {
                 "statusCode": 200,
