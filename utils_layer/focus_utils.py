@@ -201,7 +201,7 @@ You MUST evaluate ALL 10 rules.  Return JSON only:
   "category":"true" or "false",
   "rule":[…],
   "explanation":"A detailed explanation of your reasoning.",
-  "explanation_summary": "A VERY SHORT, plain-language summary of no more than 20 words. Do NOT repeat the explanation. Do NOT add extra details or confidence scores.",
+  "explanation_summary": "A short summary in this format: 'Confidence: [number]% | Key Evidence: [short phrase supporting the confidence. Not more than 20 words. Do NOT repeat the explanation]'",
   "confidence":"0-100%"
 }}
 ```"""
