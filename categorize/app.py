@@ -102,6 +102,9 @@ def lambda_handler(event, context):
 
         #prompt = f"I want you to act as a YouTube query classifier. I will provide a YouTube search query and you will respond with one word, either 'focus' or 'regular'. A focus mode involves informative, specific educationally content and research, whereas a regular mode is not merely focused on gaining a skill and is more aligning with popular forms of entertainment. The search query is: {query}"
         prompt = build_prompt(prompt_data)
+        # print("Prompt : ")
+        # print(prompt)
+
         body = {
             'model': 'gpt-4o-mini',
             'messages': [

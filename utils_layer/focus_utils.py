@@ -40,130 +40,1012 @@ video_record_log_table = dynamodb.Table(VIDEO_RECORD_LOG_TABLE_NAME)
 
 
 
+# FEW_SHOT_EXAMPLES = """
+# #### Rule 1 (Any previous focusMode is True)
+
+
+# Title: "Astronomy 101: Life Cycle of Stars"
+# Description: "This video explores how stars form, evolve, and end, featuring illustrations and expert narration."
+# Current category: "Education"
+# User-selected focus categories: ["Education", "Science and Technology", "Documentary"]
+# History: [
+#  {"categoryId": "Education", "focusMode": true},
+#  {"categoryId": "Music", "focusMode": false},
+#  {"categoryId": "Gaming", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/home"
+# Rules:
+# 1: true
+# 2: false
+# 3: true
+# 4: true
+# 5: false
+# 6: false
+# 7: false
+# 8: false
+# 9: true ("explores", "stars", "evolve")
+# 10: true
+# → **True**
+# Reason: Prior focus session and matching focus category.
+# explanation_summary: "Confidence: 90% | Key Evidence: Prior focus and matching category."
+# confidence: "90%"
+
+# ---
+# ### Rule 2 (Previous category == current AND focus was True) — Example 1
+
+
+# ### Rule 2 (Previous category == current AND focus was True)
+
+
+# Title: "Tesla Model S Deep Dive"
+# Description: "We examine the design, features, and performance of the 2024 Model S."
+# Current category: "Autos and Vehicles"
+# User-selected focus categories: ["Science and Technology", "Autos and Vehicles"]
+# History: [
+#  {"categoryId": "Autos and Vehicles", "focusMode": true},
+#  {"categoryId": "Comedy", "focusMode": false},
+#  {"categoryId": "Gaming", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/watch"
+# Rules:
+# 1: true
+# 2: true
+# 3: false
+# 4: true
+# 5: true
+# 6: false
+# 7: false
+# 8: true
+# 9: true ("design", "performance")
+# 10: true
+# → **True**
+# Reason: Prior focus in same category.
+# explanation_summary: "Confidence: 85% | Key Evidence: Same category with prior focus."
+# confidence: "85%"
+# ---
+
+# ### Rule 2 — Example 2
+
+# Title: "Acoustic Guitar Fingerpicking Lesson"
+# Description: "Learn basic fingerpicking techniques with this step-by-step tutorial for beginners."
+# Current categoryId: 27
+# User-selected focus categories: ["27"]
+# History: [
+#  {"categoryId": "27", "focusMode": true},
+#  {"categoryId": "10", "focusMode": false},
+#  {"categoryId": "24", "focusMode": false}
+# ]
+# Subscribed: true
+# Intent source: "/channel"
+# Rules:
+# 1: true
+# 2: true
+# 3: true
+# 4: true
+# 5: true
+# 6: true
+# 7: true
+# 8: true
+# 9: true ("lesson", "tutorial", "techniques")
+# 10: true
+# → **True**
+# Reason: Past session had focus in same category, user is subscribed, and content is highly instructional.
+
+# ---
+# ### Rule 3 (Current category in focus-supporting list)
+
+
+# Title: "Machine Learning Basics"
+# Description: "A crash course in supervised vs. unsupervised learning with examples."
+# Current category: "Education"
+# User-selected focus categories: ["Education", "Science and Technology", "Howto and Style"]
+# History: [
+#  {"categoryId": "Comedy", "focusMode": false},
+#  {"categoryId": "Gaming", "focusMode": false},
+#  {"categoryId": "Education", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/search"
+# Rules:
+# 1: false
+# 2: false
+# 3: true
+# 4: true
+# 5: false
+# 6: false
+# 7: false
+# 8: true
+# 9: true ("crash course", "learning")
+# 10: true
+# → **True**
+# Reason: Education category and learning keywords.
+# explanation_summary: "Confidence: 80% | Key Evidence: Learning topic and search intent."
+# confidence: "100%"
+# ---
+
+# ### Rule 3 — Example 2
+
+
+# Title: "Science of Sleep: How the Brain Rests"
+# Description: "Explore the biology behind sleep cycles, REM, and memory consolidation."
+# Current categoryId: 27
+# User-selected focus categories: ["27"]
+# History: [
+#  {"categoryId": "17", "focusMode": false},
+#  {"categoryId": "10", "focusMode": false},
+#  {"categoryId": "24", "focusMode": false}
+# ]
+# Subscribed: true
+# Intent source: "/channelPage"
+# Rules:
+# 1: false
+# 2: false
+# 3: true
+# 4: false
+# 5: false
+# 6: false
+# 7: true
+# 8: true
+# 9: true ("biology", "sleep cycles", "REM")
+# 10: true
+# → **True**
+# Reason: Clear science/education topic, user subscribed, high relevance.
+
+
+# ---
+# ### Rule 4 (Any previous category matches current) — Example 1
+
+
+# ### Rule 4 (Any previous category matches current)
+
+
+# Title: "Guitar Chord Progressions Explained"
+# Description: "Understand how to build beautiful chord progressions for songwriting."
+# Current category: "Music"
+# User-selected focus categories: ["Music", "Education"]
+# History: [
+#  {"categoryId": "Comedy", "focusMode": false},
+#  {"categoryId": "Music", "focusMode": false},
+#  {"categoryId": "Gaming", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/home"
+# Rules:
+# 1: false
+# 2: false
+# 3: true
+# 4: true
+# 5: false
+# 6: false
+# 7: false
+# 8: false
+# 9: true ("chord", "songwriting", "explained")
+# 10: true
+# → **True**
+# Reason: Category match and learning keywords.
+# explanation_summary: "Confidence: 75% | Key Evidence: Category match and learning keywords."
+# confidence: "75%"
+
+
+
+# ---
+# ### Rule 4 — Example 2
+
+
+# Title: "Dog Training Tips: Stop Barking"
+# Description: "Practical tips for training your dog to reduce excessive barking at home."
+# Current categoryId: 15
+# User-selected focus categories: ["10"]
+# History: [
+#  {"categoryId": "15", "focusMode": false},
+#  {"categoryId": "15", "focusMode": false},
+#  {"categoryId": "2", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/watch"
+# Rules:
+# 1: false
+# 2: false
+# 3: false
+# 4: true
+# 5: false
+# 6: false
+# 7: false
+# 8: true
+# 9: true ("training", "tips", "dog")
+# 10: true
+# → **True**
+# Reason: Category repeated and clear how-to framing triggers learning intent.
+
+
+# ---
+# ### Rule 5 (Focus=True AND category matched current)
+
+
+# Title: "Python Loops Explained"
+# Description: "Learn how for-loops and while-loops work in Python with examples."
+# Current category: "Education"
+# User-selected focus categories: ["Education", "Science and Technology"]
+# History: [
+#  {"categoryId": "Music", "focusMode": false},
+#  {"categoryId": "Education", "focusMode": true},
+#  {"categoryId": "Comedy", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/search"
+# Rules:
+# 1: true
+# 2: true
+# 3: true
+# 4: true
+# 5: true
+# 6: false
+# 7: false
+# 8: true
+# 9: true ("learn", "examples", "loops")
+# 10: true
+# → **True**
+# Reason: Prior focus and learning content.
+# explanation_summary: "Confidence: 90% | Key Evidence: Prior focus and matching category."
+# confidence: "90%"
+# ---
+# ### Rule 6 (Current category appears ≥2×) — Example 1
+
+
+# ### Rule 6 (Current category repeated ≥2×)
+
+
+# Title: "Beginner Workout Plan"
+# Description: "Daily fitness routines for those new to the gym."
+# Current category: "Howto and Style"
+# User-selected focus categories: ["Howto and Style", "Education"]
+# History: [
+#  {"categoryId": "Howto and Style", "focusMode": false},
+#  {"categoryId": "Howto and Style", "focusMode": false},
+#  {"categoryId": "Gaming", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/home"
+# Rules:
+# 1: false
+# 2: false
+# 3: true
+# 4: true
+# 5: false
+# 6: true
+# 7: false
+# 8: false
+# 9: true ("fitness", "routines")
+# 10: true
+# → **True**
+# Reason: Repeated category and instructional keywords.
+# explanation_summary: "Confidence: 75% | Key Evidence: Repeated category and learning topic."
+# confidence: "75%"
+# ---
+# ### Rule 6 — Example 2
+
+
+# Title: "Beginner Workout Plan"
+# Description: "Daily fitness routines for those new to the gym and home workouts."
+# Current categoryId: 17
+# User-selected focus categories: ["17"]
+# History: [
+#  {"categoryId": "17", "focusMode": false},
+#  {"categoryId": "17", "focusMode": false},
+#  {"categoryId": "17", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/home"
+# Rules:
+# 1: false
+# 2: false
+# 3: true
+# 4: true
+# 5: false
+# 6: true
+# 7: false
+# 8: false
+# 9: true ("fitness", "routines", "workouts")
+# 10: true
+# → **True**
+# Reason: User repeatedly explores this category; clear learning intent.
+
+
+# ### Rule 7 (User is Subscribed)
+
+
+# ### Rule 7 (User is Subscribed)
+
+
+# Title: "How to Start a YouTube Channel"
+# Description: "A full beginner's guide on equipment and branding."
+# Current category: "Education"
+# User-selected focus categories: ["Education", "Howto and Style"]
+# History: [
+#  {"categoryId": "Education", "focusMode": false},
+#  {"categoryId": "Gaming", "focusMode": false},
+#  {"categoryId": "Comedy", "focusMode": false}
+# ]
+# Subscribed: true
+# Intent source: "/search"
+# Rules:
+# 1: false
+# 2: false
+# 3: true
+# 4: true
+# 5: false
+# 6: false
+# 7: true
+# 8: true
+# 9: true ("guide", "branding")
+# 10: true
+# → **True**
+# Reason: Subscribed and searching for educational content.
+# explanation_summary: "Confidence: 85% | Key Evidence: Subscribed and learning topic."
+# confidence: "85%"
+
+# ---
+# ### Rule 8 (Intent source contains Search/Channel/ChannelPage)
+
+# Title: "Learn HTML in 20 Minutes"
+# Description: "Get started with web development by learning basic HTML tags and structure."
+# Current category: "Education"
+# User-selected focus categories: ["Education", "Howto and Style"]
+# History: [
+#   {"categoryId": "Entertainment", "focusMode": false},
+#   {"categoryId": "Education", "focusMode": false},
+#   {"categoryId": "Science and Technology", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/channel"
+# Rules:
+# 1: false
+# 2: false
+# 3: true
+# 4: true
+# 5: false
+# 6: false
+# 7: false
+# 8: true
+# 9: true ("learn", "web development", "tags")
+# 10: true
+# → **True**
+# Reason: Channel-based intent, educational keywords, and matching category support focus mode.
+# explanation_summary: "Confidence: 85% | Key Evidence: Channel-based learning content and category match."
+# confidence: "85%"
+
+# ---
+# ### Rule 9 (Title/description contains focus keywords)
+
+# Title: "Lecture: World War II Causes & Consequences"
+# Description: "University history lecture covering major geopolitical causes and outcomes of WWII."
+# Current category: "Education"
+# User-selected focus categories: ["Education", "Documentary"]
+# History: [
+#   {"categoryId": "Music", "focusMode": false},
+#   {"categoryId": "Entertainment", "focusMode": false},
+#   {"categoryId": "Education", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/home"
+# Rules:
+# 1: false
+# 2: false
+# 3: true
+# 4: true
+# 5: false
+# 6: false
+# 7: false
+# 8: false
+# 9: true ("lecture", "history", "causes", "outcomes")
+# 10: true
+# → **True**
+# Reason: Strong educational framing, keyword-rich description, and matching focus categories.
+# explanation_summary: "Confidence: 80% | Key Evidence: Educational lecture content and keywords."
+# confidence: "80%"
+# ---
+
+# ### Rule 10 (Description >50 words AND has focus keywords)
+
+# Title: "Complete JavaScript Course for Beginners"
+# Description: "This full-length course will teach you everything from variables and loops to DOM manipulation, events, and ES6. Perfect for anyone getting started with JavaScript."
+# Current category: "Education"
+# User-selected focus categories: ["Education", "Howto and Style"]
+# History: [
+#   {"categoryId": "Education", "focusMode": false},
+#   {"categoryId": "Science and Technology", "focusMode": false},
+#   {"categoryId": "Entertainment", "focusMode": false}
+# ]
+# Subscribed: true
+# Intent source: "/search"
+# Rules:
+# 1: false
+# 2: false
+# 3: true
+# 4: true
+# 5: false
+# 6: false
+# 7: true
+# 8: true
+# 9: true ("course", "teach", "JavaScript")
+# 10: true
+# → **True**
+# Reason: Long, detailed description, clear learning content, subscription, and search intent all strongly support focus mode.
+# explanation_summary: "Confidence: 90% | Key Evidence: Detailed course content with learning keywords."
+# confidence: "90%"
+# ---
+# ### False Example 1 – No Signals
+
+# Title: "Daily Vlog: Grocery Shopping and Cooking"
+# Description: "Spend the day with me as I run errands and cook dinner."
+# Current category: "People and Blogs"
+# User-selected focus categories: ["Education", "Science and Technology"]
+# History: [
+#   {"categoryId": "People and Blogs", "focusMode": false},
+#   {"categoryId": "People and Blogs", "focusMode": false},
+#   {"categoryId": "People and Blogs", "focusMode": false}
+# ]
+# Subscribed: false
+# Intent source: "/home"
+# Rules:
+# 1: false
+# 2: false
+# 3: false
+# 4: true
+# 5: false
+# 6: true
+# 7: false
+# 8: false
+# 9: false
+# 10: false
+# → **False**
+# Reason: No learning signals or focus intent.
+# explanation_summary: "Confidence: 10% | Key Evidence: No focus or learning indicators."
+# confidence: "50%"
+
+# ### Now classify this new session:
+# """
+
 FEW_SHOT_EXAMPLES = """
-### Few-Shot Focus-Mode Examples
+### Example 1 – Education Focus with Search Intent
 
-Example 1
-Title: "Lil Yachty – Lunch Break Freestyle"
-Description: "Lyrical Lemonade Presents: Lil Yachty… (song produced by…)"
-Current category: 10
-History: [(cat=10, focus=TRUE), (cat=, focus=TRUE), (cat=, focus=FALSE)]
-Subscribed: False
-Intent source: "/watch"
-→ **True**
-Reason: user just watched category 10 with focus ON and is repeating the same category with focus from last session—a **strong signal** to stay in Focus Mode.
-
-Example 2
-Title: "Beginner Python Tutorial"
-Description: "Learn Python basics, variables, loops, and functions…"
-Current category: 27
-History: [(cat=24, focus=FALSE), (cat=27, focus=FALSE), (cat=, focus=FALSE)]
-Subscribed: True
+Title: "Complete JavaScript Course for Beginners"
+Description: "Learn everything from variables to DOM manipulation in this full-length course."
+Current category: "Education"
+User-selected focus categories: ["Education", "Science and Technology"]
+History: [
+  {"categoryId": "Education", "focusMode": true},
+  {"categoryId": "Gaming", "focusMode": false},
+  {"categoryId": "Music", "focusMode": false}
+]
+Subscribed: true
 Intent source: "/search"
+Rules:
+1: true
+2: true
+3: true
+4: true
+5: true
+6: false
+7: true
+8: true
+9: true ("course", "learn", "JavaScript")
+10: true
 → **True**
-Reason: Python tutorial (Education/How-to) matches user’s learning intent and user is subscribed; soft signals enough to enable.
+Reason: Prior Education focus, subscription, strong keywords.
+explanation_summary: "Confidence: 95% | Key Evidence: Prior focus and subscription in Education."
+confidence: "95%"
 
-Example 3
-Title: "Top 10 Funny Cat Clips"
-Description: "Watch these hilarious cat fails and meows…"
-Current category: 15
-History: [(cat=15, focus=FALSE), (cat=15, focus=FALSE), (cat=, focus=FALSE)]
-Subscribed: False
+---
+
+### Example 2 – Sports with Repeated Category but No Prior Focus
+
+Title: "Top 50 NBA Dunks"
+Description: "Relive the best slam dunks in NBA history."
+Current category: "Sports"
+User-selected focus categories: ["Sports", "Entertainment"]
+History: [
+  {"categoryId": "Sports", "focusMode": false},
+  {"categoryId": "Sports", "focusMode": false},
+  {"categoryId": "Entertainment", "focusMode": false}
+]
+Subscribed: false
 Intent source: "/home"
-→ **False**
-Reason: although category repeats, no prior focus, no subscription, and intent source is weak—so Focus Mode stays off.
-
-Example 4
-Title: "Advanced Calculus Lecture"
-Description: "This lecture covers multivariable derivatives and integrals…"
-Current category: 27
-History: [(cat=27, focus=TRUE), (cat=27, focus=TRUE), (cat=, focus=FALSE)]
-Subscribed: False
-Intent source: "/channelPage"
+Rules:
+1: false
+2: false
+3: true
+4: true
+5: false
+6: true
+7: false
+8: false
+9: true ("dunks", "NBA")
+10: true
 → **True**
-Reason: repeated focused lectures in category 27 twice—strongest signal to keep Focus Mode on.
+Reason: Repeated category and user focus preference.
+explanation_summary: "Confidence: 75% | Key Evidence: Repeated Sports category."
+confidence: "75%"
 
-Example 5
-Title: "Marvel’s New Trailer Breakdown"
-Description: "We analyze the latest Marvel trailer scene by scene…"
-Current category: 1
-History: [(cat=1, focus=FALSE), (cat=2, focus=TRUE), (cat=, focus=FALSE)]
-Subscribed: True
-Intent source: "/search"
-→ **True**
-Reason: user subscribed, intent is search, category is film/animation—a soft signal stack passes threshold.
+---
 
-Example 6
-Title: "5-Minute Home Workout"
-Description: "Quick HIIT routine to get your heart racing…"
-Current category: 17
-History: [(cat=17, focus=FALSE), (cat=17, focus=FALSE), (cat=17, focus=FALSE)]
-Subscribed: False
-Intent source: "/home"
-→ **False**
-Reason: no prior focus, description short, no learning keywords—Focus Mode stays off.
+### Example 3 – Documentary with Channel Intent
 
-Example 7
-Title: "Quantum Physics Explained"
-Description: "A deep dive into quantum entanglement and superposition…"
-Current category: 27
-History: [(cat=, focus=FALSE), (cat=, focus=FALSE), (cat=, focus=FALSE)]
-Subscribed: False
-Intent source: "/search"
-→ **True**
-Reason: strong learning intent keyword “explained,” intent is search, category is Science/Education.
-
-Example 8
-Title: "Daily Vlog: A Day in My Life"
-Description: "Come spend a day doing chores, cooking, and errands…"
-Current category: 22
-History: [(cat=22, focus=FALSE), (cat=22, focus=FALSE), (cat=22, focus=FALSE)]
-Subscribed: False
-Intent source: "/home"
-→ **False**
-Reason: lifestyle vlog, no learning intent, no prior focus—Focus Mode off.
-
-Example 9
-Title: "Guitar Tutorial for Beginners"
-Description: "Learn three basic chords on acoustic guitar…"
-Current category: 27
-History: [(cat=, focus=FALSE), (cat=, focus=FALSE), (cat=, focus=FALSE)]
-Subscribed: True
+Title: "Secrets of the Ocean"
+Description: "Explore marine life in this documentary series."
+Current category: "Documentary"
+User-selected focus categories: ["Documentary", "Education"]
+History: [
+  {"categoryId": "Documentary", "focusMode": false},
+  {"categoryId": "Travel and Events", "focusMode": false},
+  {"categoryId": "Documentary", "focusMode": false}
+]
+Subscribed: true
 Intent source: "/channel"
+Rules:
+1: false
+2: false
+3: true
+4: true
+5: false
+6: true
+7: true
+8: true
+9: true ("documentary", "marine life")
+10: true
 → **True**
-Reason: tutorial keyword, category in education, user subscribed, intent strong—enable.
+Reason: Repeated Documentary category, subscription, and keywords.
+explanation_summary: "Confidence: 85% | Key Evidence: Repeated Documentary and subscription."
+confidence: "85%"
 
-Example 10
-Title: "Epic Car Drift Compilation"
-Description: "The wildest drift runs from pro drivers…"
-Current category: 2
-History: [(cat=2, focus=TRUE), (cat=3, focus=FALSE), (cat=, focus=FALSE)]
-Subscribed: False
+---
+
+### Example 4 – Music with Prior Focus
+
+Title: "Live Concert – Symphony No.9"
+Description: "Experience Beethoven's 9th Symphony performed live."
+Current category: "Music"
+User-selected focus categories: ["Music", "Entertainment"]
+History: [
+  {"categoryId": "Music", "focusMode": true},
+  {"categoryId": "Entertainment", "focusMode": false},
+  {"categoryId": "Music", "focusMode": false}
+]
+Subscribed: false
+Intent source: "/watch"
+Rules:
+1: true
+2: true
+3: true
+4: true
+5: true
+6: true
+7: false
+8: false
+9: true ("concert", "symphony", "live")
+10: true
+→ **True**
+Reason: Prior Music focus, repeated category.
+explanation_summary: "Confidence: 90% | Key Evidence: Music focus history."
+confidence: "90%"
+
+---
+
+### Example 5 – Howto & Style with Search Intent
+
+Title: "How to Bake Sourdough Bread"
+Description: "Step-by-step guide to baking perfect sourdough bread."
+Current category: "Howto and Style"
+User-selected focus categories: ["Howto and Style", "Education"]
+History: [
+  {"categoryId": "Howto and Style", "focusMode": false},
+  {"categoryId": "Education", "focusMode": false},
+  {"categoryId": "Howto and Style", "focusMode": false}
+]
+Subscribed: true
+Intent source: "/search"
+Rules:
+1: false
+2: false
+3: true
+4: true
+5: false
+6: true
+7: true
+8: true
+9: true ("guide", "baking", "sourdough")
+10: true
+→ **True**
+Reason: How-to keywords, search intent, subscription.
+explanation_summary: "Confidence: 85% | Key Evidence: How-to keywords and search intent."
+confidence: "85%"
+
+---
+
+### Example 6 – News & Politics Learning Content
+
+Title: "Global Economic Outlook 2024"
+Description: "An in-depth analysis of world markets and policy impacts."
+Current category: "News and Politics"
+User-selected focus categories: ["News and Politics", "Education"]
+History: [
+  {"categoryId": "News and Politics", "focusMode": false},
+  {"categoryId": "Education", "focusMode": false},
+  {"categoryId": "News and Politics", "focusMode": false}
+]
+Subscribed: false
+Intent source: "/search"
+Rules:
+1: false
+2: false
+3: true
+4: true
+5: false
+6: true
+7: false
+8: true
+9: true ("analysis", "markets", "policy")
+10: true
+→ **True**
+Reason: Learning keywords, search intent, repeated category.
+explanation_summary: "Confidence: 80% | Key Evidence: Learning content and repeated category."
+confidence: "80%"
+
+---
+
+### Example 7 – Sports with Prior Focus
+
+Title: "Marathon Training Guide"
+Description: "Learn the best techniques to prepare for your first marathon."
+Current category: "Sports"
+User-selected focus categories: ["Sports", "Health"]
+History: [
+  {"categoryId": "Sports", "focusMode": true},
+  {"categoryId": "Health", "focusMode": false},
+  {"categoryId": "Sports", "focusMode": false}
+]
+Subscribed: true
+Intent source: "/search"
+Rules:
+1: true
+2: true
+3: true
+4: true
+5: true
+6: true
+7: true
+8: true
+9: true ("training", "marathon")
+10: true
+→ **True**
+Reason: Prior focus, subscription, repeated Sports category.
+explanation_summary: "Confidence: 95% | Key Evidence: Prior focus and subscription."
+confidence: "95%"
+
+---
+
+### Example 8 – Documentary with No Prior Focus but Repeated Category
+
+Title: "Wildlife in the Sahara"
+Description: "A documentary exploring animals in the desert."
+Current category: "Documentary"
+User-selected focus categories: ["Documentary"]
+History: [
+  {"categoryId": "Documentary", "focusMode": false},
+  {"categoryId": "Documentary", "focusMode": false},
+  {"categoryId": "Travel and Events", "focusMode": false}
+]
+Subscribed: false
+Intent source: "/channelPage"
+Rules:
+1: false
+2: false
+3: true
+4: true
+5: false
+6: true
+7: false
+8: true
+9: true ("documentary", "wildlife")
+10: true
+→ **True**
+Reason: Repeated category and strong keywords.
+explanation_summary: "Confidence: 80% | Key Evidence: Repeated category and keywords."
+confidence: "80%"
+
+---
+
+### Example 9 – Gaming Entertainment No Focus
+
+Title: "Fortnite Funny Moments"
+Description: "Hilarious clips and fails from Fortnite matches."
+Current category: "Gaming"
+User-selected focus categories: ["Education"]
+History: [
+  {"categoryId": "Gaming", "focusMode": false},
+  {"categoryId": "Entertainment", "focusMode": false},
+  {"categoryId": "Gaming", "focusMode": false}
+]
+Subscribed: false
 Intent source: "/home"
-→ **True**
-Reason: prior focus ON in same car/auto category—strongest single rule.
+Rules:
+1: false
+2: false
+3: false
+4: true
+5: false
+6: true
+7: false
+8: false
+9: false
+10: false
+→ **False**
+Reason: Entertainment content with no focus signals.
+explanation_summary: "Confidence: 20% | Key Evidence: No learning or focus signals."
+confidence: "20%"
 
-### Now classify this new session:
+---
+
+### Example 10 – Comedy with No Focus Signals
+
+Title: "Best Stand-Up Comedy Clips"
+Description: "Laugh along with the funniest stand-up routines."
+Current category: "Comedy"
+User-selected focus categories: ["Education", "Documentary"]
+History: [
+  {"categoryId": "Comedy", "focusMode": false},
+  {"categoryId": "Entertainment", "focusMode": false},
+  {"categoryId": "Comedy", "focusMode": false}
+]
+Subscribed: false
+Intent source: "/home"
+Rules:
+1: false
+2: false
+3: false
+4: true
+5: false
+6: true
+7: false
+8: false
+9: false
+10: false
+→ **False**
+Reason: Pure entertainment with no focus signals.
+explanation_summary: "Confidence: 15% | Key Evidence: No focus signals."
+confidence: "15%"
+
+---
+
+### Example 11 – Film Trailer with Subscribed but No Focus Signals
+
+Title: "Official Trailer – New Sci-Fi Blockbuster"
+Description: "Watch the thrilling new trailer for this summer's biggest sci-fi film."
+Current category: "Film and Animation"
+User-selected focus categories: ["Education"]
+History: [
+  {"categoryId": "Film and Animation", "focusMode": false},
+  {"categoryId": "Entertainment", "focusMode": false},
+  {"categoryId": "Film and Animation", "focusMode": false}
+]
+Subscribed: true
+Intent source: "/home"
+Rules:
+1: false
+2: false
+3: false
+4: true
+5: false
+6: true
+7: true
+8: false
+9: false
+10: false
+→ **False**
+Reason: Subscription alone insufficient; no learning or focus signals.
+explanation_summary: "Confidence: 25% | Key Evidence: Subscribed but entertainment trailer."
+confidence: "25%"
+
+---
+
+### Example 12 – People and Blogs Vlog
+
+Title: "Daily Vlog: Grocery Shopping and Cooking"
+Description: "Spend the day with me running errands and cooking."
+Current category: "People and Blogs"
+User-selected focus categories: ["Education"]
+History: [
+  {"categoryId": "People and Blogs", "focusMode": false},
+  {"categoryId": "People and Blogs", "focusMode": false},
+  {"categoryId": "People and Blogs", "focusMode": false}
+]
+Subscribed: false
+Intent source: "/home"
+Rules:
+1: false
+2: false
+3: false
+4: true
+5: false
+6: true
+7: false
+8: false
+9: false
+10: false
+→ **False**
+Reason: No learning signals or focus indicators.
+explanation_summary: "Confidence: 10% | Key Evidence: No focus signals."
+confidence: "10%"
 """
+
+CATEGORY_KEYWORDS = {
+    "Film and Animation": [  # Film & Animation
+        "movie", "film", "animation", "trailer", "cinematography",
+        "short film", "anime", "cartoon", "storyboard", "CGI"
+    ],
+    "Autos & Vehicles": [  # Autos & Vehicles
+        "car", "vehicle", "engine", "test drive", "racing",
+        "motorcycle", "auto repair", "horsepower", "tuning", "drift"
+    ],
+    "Music": [  # Music
+        "song", "music video", "album", "live performance", "cover",
+        "remix", "concert", "lyrics", "instrumental", "playlist"
+    ],
+    "Pets & Animals": [  # Pets & Animals
+        "cat", "dog", "wildlife", "zoo", "animal rescue",
+        "pet care", "training", "exotic", "veterinary", "puppy"
+    ],
+    "Sports": [  # Sports
+        "football", "basketball", "soccer", "highlights", "olympics",
+        "workout", "training", "athlete", "fitness", "UFC", "tennis", "F1"
+    ],
+    "Short Movies": [  # Short Movies
+        "short film", "indie film", "film festival", "microfilm",
+        "vignette", "story"
+    ],
+    "Travel & Events": [  # Travel & Events
+        "travel vlog", "destination", "tourism", "festival", "adventure",
+        "backpacking", "road trip", "sightseeing", "cruise", "hotel"
+    ],
+    "Gaming": [  # Gaming
+        "gameplay", "walkthrough", "let's play", "eSports", "speedrun",
+        "VR", "console", "PC gaming", "Minecraft", "Fortnite"
+    ],
+    "Videoblogging": [  # Videoblogging
+        "vlog", "daily vlog", "lifestyle vlog", "storytime", "behind the scenes",
+        "channel update"
+    ],
+    "People & Blogs": [  # People & Blogs
+        "personal vlog", "storytime", "advice", "lifestyle", "Q&A",
+        "commentary", "haul", "opinion", "self-improvement", "routine"
+    ],
+    "Comedy": [  # Comedy
+        "stand-up", "sketch", "parody", "meme", "improv", "sitcom", "slapstick", "spoof",
+        "roast", "prank", "satire", "comedy special", "lol", "skit",
+        "laugh", "comedic",
+    ],
+    "Entertainment": [  # Entertainment
+        "celebrity news", "gossip", "pop culture", "movie review", "reality TV",
+        "award show", "red carpet", "fan theory"
+    ],
+    "News & Politics": [  # News & Politics
+        "breaking news", "election", "policy", "debate", "journalist",
+        "world affairs", "crisis", "protest", "analysis", "government"
+    ],
+    "Howto & Style": [  # How-to & Style
+        "tutorial", "DIY", "makeup", "fashion", "skincare",
+        "hair", "life hack", "home improvement", "renovation"
+    ],
+    "Education": [  # Education
+        "lecture", "lesson", "course", "study", "tutorial",
+        "exam prep", "classroom", "teacher", "learning", "module"
+    ],
+    "Science and Technology": [  # Science & Technology
+        "science", "tech review", "AI", "machine learning", "robotics",
+        "gadgets", "experiment", "NASA", "innovation", "quantum"
+    ],
+    "Nonprofits & Activism": [  # Nonprofits & Activism
+        "charity", "activism", "fundraiser", "social justice", "climate change",
+        "volunteer", "awareness", "sustainability", "human rights"
+    ],
+    "Movies": [  # Movies
+        "blockbuster", "cinema", "screening", "box office", "movie critique",
+        "genre", "director", "actor", "film history"
+    ],
+    "Anime/Animation": [  # Anime/Animation
+        "anime", "manga", "Studio Ghibli", "cosplay", "OVA",
+        "AMV", "cartoon", "animated series"
+    ],
+    "Action/Adventure": [  # Action/Adventure
+        "action movie", "stunts", "hero", "adventure", "chase",
+        "battle", "quest", "thriller"
+    ],
+    "Classics": [  # Classics
+        "classic film", "vintage", "retro", "black and white", "Golden Age",
+        "film history", "old movie"
+    ],
+    "Documentary": [  # Documentary
+        "documentary", "docu", "true story", "investigation", "biography",
+        "nature doc", "historical doc"
+    ],
+    "Drama": [  # Drama
+        "dramatic", "soap opera", "melodrama", "character study",
+        "theatrical", "emotional"
+    ],
+    "Family": [  # Family
+        "family film", "kids", "children", "parenting", "Disney",
+        "animated", "family-friendly"
+    ],
+    "Foreign": [  # Foreign
+        "foreign film", "international cinema", "subtitles", "world cinema",
+        "international", "global film"
+    ],
+    "Horror": [  # Horror
+        "horror movie", "scary", "ghost", "zombie", "paranormal",
+        "slasher", "haunted"
+    ],
+    "Sci-Fi/Fantasy": [  # Sci-Fi/Fantasy
+        "sci-fi", "fantasy", "space opera", "aliens", "magic",
+        "dragons", "futuristic", "dystopia"
+    ],
+    "Thriller": [  # Thriller
+        "thriller", "suspense", "mystery", "crime", "detective",
+        "psychological", "plot twist"
+    ],
+    "Shorts": [  # Shorts
+        "shorts", "#shorts", "clip", "microvideo", "vertical video"
+    ],
+    "Shows": [  # Shows
+        "TV show", "series", "episode", "sitcom", "reality show",
+        "season", "streaming"
+    ],
+    "Trailers": [  # Trailers
+        "trailer", "teaser", "preview", "official trailer", "sneak peek"
+    ],
+}
 
 def build_prompt(row):
     # [your existing extraction logic…]
     prev_focuses = [str(row.get(f"focusMode_{i+1}", "")).lower()=="true" for i in range(3)]
-    prev_cats      = [str(row.get(f"categoryId_{i+1}", "")) for i in range(3)]
-    focus_cats = str(row["focus_categories"])
+    prev_cats = [str(row.get(f"categoryId_{i+1}", "")) for i in range(3)]
+    focus_cats = row["focus_categories"][0]
     title          = str(row.get("title","")).replace("\n"," ")
     desc           = str(row.get("description","")).replace("\n"," ")
     current_cat    = str(row.get("video_category",""))
     desc_wc        = len(desc.split())
     is_sub         = str(row.get("isSubscribed",False)).lower()=="true"
     intent_source  = str(row.get("curr_intent_source","")).lower()
-    focus_keys     = ["study","tutorial","lecture","focus","class","learn","course"]
-    key_hits       = [kw for kw in focus_keys if kw in title.lower() or kw in desc.lower()]
+
+    categories_list = [cat.strip() for cat in focus_cats.split(",")]
+    user_kw_list = []
+    for cat_str in categories_list:
+        # print("cat_str : ")
+        # print(cat_str)
+    # pick top keywords per category
+        kws = CATEGORY_KEYWORDS.get(cat_str, [])
+      
+        # print("kws : ")
+        # print(kws)
+        user_kw_list.extend(kws)
+
+    # de-dup & lowercase
+    user_kw_list = list({kw.lower() for kw in user_kw_list})
+    # print("user_kw_list : ")
+    # print(user_kw_list)
+    # 5) Find which of those actually appear in title or description
+    key_hits = [kw for kw in user_kw_list
+                if kw in title.lower().split(" ") or kw in desc.lower().split(" ")]
+
+    # key_hits       = [kw for kw in focus_keys if kw in title.lower() or kw in desc.lower()]
     cat_focus_map  = "\n".join(
         f"{i+1}. categoryId_{i+1}={prev_cats[i]} → focusMode_{i+1}={prev_focuses[i]}"
         for i in range(3)
     )
 
+    # print("key_hits : ")
+    # print(key_hits)
     # your original template, but **without** the few-shot block
     main_prompt = f"""
 You are a YouTube Focus Mode decision assistant.
@@ -178,24 +1060,33 @@ Evaluate the following:
 - Current categoryId: {current_cat}
 
 ### User Focus Context:
-- User-selected focus categories: {', '.join(sorted(focus_cats)) or "None"}
+- User-selected focus categories: {focus_cats or "None"}
 
 ### Past Sessions:
 {cat_focus_map}
 
 ### Evaluation Rules
 1. Any previous focusMode is True.
-2. If any previous categoryId==current and that session had focusMode=True.
-3. Current category is in focus-supporting list.
-4. Any previous category matches current.
-5. A previous focusMode=True AND category matched current.
-6. Current category appears ≥2× in history.
+2. If any previous categoryId==current and that session had focusMode=True.**Strong Signal**
+3. If the current category is in the user's selected focus categories, treat this as a strong signal. Even if no prior focus or other signals exist, this alone is enough to enable Focus Mode.
+4. Any previous category matches current.**Strong Signal**
+5. A previous focusMode=True AND categoryId of that focusMode matched current vidoes categoryId.
+6. Current category appears ≥2 times.**Strong Signal**
 7. User is subscribed → {is_sub}
 8. Intent source contains Search/Channel → {intent_source}
 9. Title/description contains focus keywords → {', '.join(key_hits) or "None"}
 10. Description >50 words AND has focus keywords → {desc_wc>50 and len(key_hits)>0}
 
-You MUST evaluate ALL 10 rules.  Return JSON only:
+
+### Guidance for Predictions
+- Use the examples as reference, not as strict rules.
+- It is acceptable for similar cases to have different outcomes if context differs.
+- Reflect uncertainty by giving confidence between 60%–95% unless all signals strongly align.
+- Always base your prediction on the full evidence above, not just pattern matching.
+
+Your goal is to evaluate whether **Focus Mode** should be enabled for the current session.
+You MUST evaluate ALL 10 rules. 
+IF ANY OF THE *Strong Signals* IS VERIFIED RETURN -> true.  Return JSON only:
 ```json
 {{
   "category":"true" or "false",
@@ -242,11 +1133,19 @@ def decimal_to_int(obj):
 
 
 def getStageResponseObject(response_object, user_id, is_stage_changed, is_study_completed):
+    current_week = -1
+    for i, stage_num in enumerate(response_object["Stage_Order_List"]):
+        if stage_num == response_object["Current_Stage"]:
+            current_week = i+1
+
+    if current_week == -1:   
+        return None     
     data = {
             "user_Id": user_id,
             "current_stage": response_object["Current_Stage"],
             "is_stage_changed": is_stage_changed,
-            "is_study_completed": is_study_completed
+            "is_study_completed": is_study_completed,
+            "current_week": current_week
         }
     return data
 
@@ -309,6 +1208,14 @@ def update_user_stage(user_id : str):
             databaseAttributes = response["Attributes"]
             
             data = getStageResponseObject(databaseAttributes, user_id, True, False)
+            if data is None:
+                return  {
+                    "statusCode": 500,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps({
+                        "message": "Internal Error: currnet stage not found"
+                    }),
+                }
             return {
                 "statusCode": 200,
                 "headers": CORS_HEADERS,
@@ -333,6 +1240,15 @@ def update_user_stage(user_id : str):
             )
             databaseAttributes = response["Attributes"]
             data = getStageResponseObject(databaseAttributes, user_id, True, True)
+            if data is None:
+                return  {
+                    "statusCode": 500,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps({
+                        "message": "Internal Error: currnet stage not found"
+                    }),
+                }
+            
             return {
                     "statusCode": 200,
                     "headers": CORS_HEADERS,
@@ -357,6 +1273,15 @@ def update_user_stage(user_id : str):
             )
             databaseAttributes = response["Attributes"]
             data = getStageResponseObject(databaseAttributes, user_id, True, False)
+
+            if data is None:
+                return  {
+                    "statusCode": 500,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps({
+                        "message": "Internal Error: currnet stage not found"
+                    }),
+                }
             return {
                         "statusCode": 200,
                         "headers": CORS_HEADERS,
@@ -369,6 +1294,15 @@ def update_user_stage(user_id : str):
             # No need to change any stage information
             # return response with user_id:
             data = getStageResponseObject(response, user_id, False, False)
+            if data is None:
+                return  {
+                    "statusCode": 500,
+                    "headers": CORS_HEADERS,
+                    "body": json.dumps({
+                        "message": "Internal Error: currnet stage not found"
+                    }),
+                }
+            
             return {
                 "statusCode": 200,
                 "headers": CORS_HEADERS,
