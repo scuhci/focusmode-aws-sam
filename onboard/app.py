@@ -105,6 +105,7 @@ def lambda_handler(event, context):
             "verification_code": verification_code,
             "is_stage_changed": True,
             "is_study_completed": False,
+            "current_week": 1
         }
         return {
             "statusCode": 200,
