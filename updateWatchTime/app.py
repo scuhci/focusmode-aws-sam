@@ -24,7 +24,7 @@ def lambda_handler(event, context):
         }
 
     # get query parameters and body
-    id: str = requested_body.get("prolificId")
+    id: str = str(requested_body.get("prolificId"))
     stage_to_update: str = str(requested_body.get("stage"))
     watch_time: int = requested_body.get("watchTime") 
 

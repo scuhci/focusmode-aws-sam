@@ -26,7 +26,7 @@ def lambda_handler(event, context):
         }
 
     # get query parameters and body
-    id: str = requested_body.get("prolificId")
+    id: str = str(requested_body.get("prolificId"))
 
     is_missing = check_id(id)
     if is_missing: 
