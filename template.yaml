@@ -81,6 +81,8 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeUserTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref FocusModeUserTable
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeVideoRecordLogTable
         - DynamoDBWritePolicy:
@@ -114,6 +116,7 @@ Resources:
             TableName: !Ref FocusModeUserTable
         - DynamoDBReadPolicy:
             TableName: !Ref FocusModeAdminTable
+            
   CategorizeFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -170,6 +173,8 @@ Resources:
             Method: ANY
       Policies:
         - DynamoDBReadPolicy:
+            TableName: !Ref FocusModeUserTable
+        - DynamoDBWritePolicy:
             TableName: !Ref FocusModeUserTable
         - DynamoDBWritePolicy:
             TableName: !Ref FocusModeDataCollectionTable
