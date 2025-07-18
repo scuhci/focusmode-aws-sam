@@ -1081,7 +1081,10 @@ Evaluate the following:
 ### Guidance for Predictions
 - Use the examples as reference, not as strict rules.
 - It is acceptable for similar cases to have different outcomes if context differs.
-- Reflect uncertainty by giving confidence between 60%–95% unless all signals strongly align.
+- Return a confidence score between 60–100%, representing how confident you are in the decision you’ve made (whether true or false).
+	- If your evaluation strongly supports Focus Mode = true, assign high confidence (e.g. 90–100%).
+	- If your evaluation strongly supports Focus Mode = false, assign high confidence (e.g. 85–95%).
+	- If the signals are mixed or weak, reduce the score accordingly (e.g. 60–70%).
 - Always base your prediction on the full evidence above, not just pattern matching.
 
 Your goal is to evaluate whether **Focus Mode** should be enabled for the current session.
@@ -1093,7 +1096,7 @@ IF ANY OF THE *Strong Signals* IS VERIFIED RETURN -> true.  Return JSON only:
   "rule":[…],
   "explanation":"A detailed explanation of your reasoning.",
   "explanation_summary": "A short summary in this format: 'Confidence: [number]% | Key Evidence: [short phrase supporting the confidence. Not more than 20 words. Do NOT repeat the explanation]'",
-  "confidence":"0-100%"
+  "confidence":"0-100% score indicating how confident the model is in the decision (true or false). High score = strong belief in that decision."
 }}
 ```"""
     return FEW_SHOT_EXAMPLES + main_prompt
