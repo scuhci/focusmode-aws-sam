@@ -726,6 +726,7 @@ def update_user_stage(user_id : str):
         user_stage_order_list = response["Stage_Order_List"]
         stage_start_times = response["Stage_Start_Times"]
         last_active_timestamp = response["Last_Active_At_Time"]
+        user_completed_stages = response["User_Completed_Stages"]
 
         stage = get_current_study_stage(stage_start_times, last_active_timestamp)
         is_study_completed = is_study_over(stage_start_times, user_stage_order_list, last_active_timestamp)
@@ -759,29 +760,31 @@ def update_user_stage(user_id : str):
             }
         
         if is_study_completed:
-            response = user_table.update_item(
-                Key={"User_Id": user_id},
-                UpdateExpression=(
-                    f"SET Current_Stage = :new_stage,"
-                    f"User_Completed_Stages = list_append(User_Completed_Stages, :last_stage)"
-                ),
-                ExpressionAttributeValues={
-                    ":new_stage": stage,
-                    ":last_stage": [current_study_stage]
-                },
-                ReturnValues="ALL_NEW"
-            )
-            databaseAttributes = response["Attributes"]
-            data = getStageResponseObject(databaseAttributes, user_id, True, True)
-            if data is None:
-                return  {
-                    "statusCode": 500,
-                    "headers": CORS_HEADERS,
-                    "body": json.dumps({
-                        "message": "Internal Error: currnet stage not found"
-                    }),
-                }
-            
+            if current_study_stage not in user_completed_stages:
+                response = user_table.update_item(
+                    Key={"User_Id": user_id},
+                    UpdateExpression=(
+                        f"SET Current_Stage = :new_stage,"
+                        f"User_Completed_Stages = list_append(User_Completed_Stages, :last_stage)"
+                    ),
+                    ExpressionAttributeValues={
+                        ":new_stage": stage,
+                        ":last_stage": [current_study_stage]
+                    },
+                    ReturnValues="ALL_NEW"
+                )
+                databaseAttributes = response["Attributes"]
+                data = getStageResponseObject(databaseAttributes, user_id, True, True)
+                if data is None:
+                    return  {
+                        "statusCode": 500,
+                        "headers": CORS_HEADERS,
+                        "body": json.dumps({
+                            "message": "Internal Error: currnet stage not found"
+                        }),
+                    }
+            else:
+                data = getStageResponseObject(response, user_id, False, True)
             return {
                     "statusCode": 200,
                     "headers": CORS_HEADERS,
